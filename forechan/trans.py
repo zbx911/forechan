@@ -2,14 +2,14 @@ from asyncio import gather
 from collections import deque
 from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
 
-from ._base import LockedBaseChan
+from ._base import BaseChan
 from .types import Channel, ChannelClosed
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
-class _TransChan(LockedBaseChan[T], Generic[T, U]):
+class _TransChan(BaseChan[T], Generic[T, U]):
     def __init__(
         self,
         trans: Callable[[AsyncIterator[U]], AsyncIterator[T]],

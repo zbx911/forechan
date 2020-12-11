@@ -1,13 +1,13 @@
 from collections import deque
 from typing import Deque, Type, TypeVar, cast
 
-from ._base import LockedBaseChan
+from ._base import BaseChan
 from .types import Channel, ChannelClosed
 
 T = TypeVar("T")
 
 
-class _Chan(LockedBaseChan[T]):
+class _Chan(BaseChan[T]):
     def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))

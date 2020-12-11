@@ -2,13 +2,13 @@ from asyncio import gather
 from collections import deque
 from typing import Any, Deque, Sequence, Tuple, TypeVar, cast
 
-from ._base import LockedBaseChan
+from ._base import BaseChan
 from .types import Channel, ChannelClosed
 
 T = TypeVar("T")
 
 
-class _SelectChan(LockedBaseChan[T]):
+class _SelectChan(BaseChan[T]):
     def __init__(
         self,
         chan: Channel[Any],
