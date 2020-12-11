@@ -1,6 +1,7 @@
 from asyncio.locks import Condition
 from asyncio.tasks import gather
-from typing import Any, AsyncIterator, MutableSet, TypeVar
+from contextlib import contextmanager
+from typing import Any, AsyncIterator, Iterator, MutableSet, TypeVar
 from weakref import WeakSet
 
 from .types import Channel, ChannelClosed, Notifier, Unsub
@@ -32,19 +33,37 @@ class BaseChan(Channel[T], AsyncIterator[T]):
 
     async def _on_send(self, notif: Notifier) -> Unsub:
         self._ss.add(notif)
-        return lambda: self._ss.remove(notif)
+        return lambda: self._ss.remove(notif) if notif in self._ss else None
 
     async def _on_recv(self, notif: Notifier) -> Unsub:
         self._rs.add(notif)
-        return lambda: self._rs.remove(notif)
+        return lambda: self._rs.remove(notif) if notif in self._rs else None
+
+    @contextmanager
+    def _notify_send(self) -> Iterator[None]:
+        try:
+            yield None
+        finally:
+            for notif in self._ss:
+                notif()
+
+    @contextmanager
+    def _notify_recv(self) -> Iterator[None]:
+        try:
+            yield None
+        finally:
+            for notif in self._rs:
+                notif()
 
     async def close(self) -> None:
         async def c1() -> None:
             async with self._sc:
+                self._rs.clear()
                 self._sc.notify_all()
 
         async def c2() -> None:
             async with self._rc:
+                self._ss.clear()
                 self._rc.notify_all()
 
         await gather(c1(), c2())

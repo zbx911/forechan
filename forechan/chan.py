@@ -29,38 +29,40 @@ class _Chan(BaseChan[T]):
         await super().close()
 
     async def send(self, item: T) -> None:
-        async with self._sc:
-            if not self:
-                raise ChannelClosed()
-            elif len(self) < self.maxlen:
-                async with self._rc:
-                    self._rc.notify()
-                    self._q.append(item)
-            else:
-                await self._sc.wait()
-                async with self._rc:
-                    if not self:
-                        raise ChannelClosed()
-                    else:
+        with self._notify_send():
+            async with self._sc:
+                if not self:
+                    raise ChannelClosed()
+                elif len(self) < self.maxlen:
+                    async with self._rc:
                         self._rc.notify()
                         self._q.append(item)
+                else:
+                    await self._sc.wait()
+                    async with self._rc:
+                        if not self:
+                            raise ChannelClosed()
+                        else:
+                            self._rc.notify()
+                            self._q.append(item)
 
     async def recv(self) -> T:
-        async with self._rc:
-            if not self:
-                raise ChannelClosed()
-            elif len(self):
-                async with self._sc:
-                    self._sc.notify()
-                    return self._q.popleft()
-            else:
-                await self._rc.wait()
-                async with self._sc:
-                    if not self:
-                        raise ChannelClosed()
-                    else:
+        with self._notify_recv():
+            async with self._rc:
+                if not self:
+                    raise ChannelClosed()
+                elif len(self):
+                    async with self._sc:
                         self._sc.notify()
                         return self._q.popleft()
+                else:
+                    await self._rc.wait()
+                    async with self._sc:
+                        if not self:
+                            raise ChannelClosed()
+                        else:
+                            self._sc.notify()
+                            return self._q.popleft()
 
 
 def mk_chan(t: Type[T], maxlen: int = 1) -> Channel[T]:
