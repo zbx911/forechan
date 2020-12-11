@@ -27,13 +27,16 @@ class TransBaseSetup:
 class UpstreamSend(TransBaseSetup.SetupChan):
     async def test_1(self) -> None:
         await self.p.send(1)
-        await gather(self.ch.recv(), self.p.send(1))
+        await self.ch.recv()
+        await self.p.send(1)
+        await self.ch.recv()
+        await self.p.send(1)
 
     async def test_2(self) -> None:
+        fut = gather(self.ch.recv(), self.ch.recv())
         await self.p.send(1)
-        await self.ch.recv()
         await self.p.send(1)
-        await self.ch.recv()
+        await fut
 
     async def test_3(self) -> None:
         sends = repeat(self.p.send(1), REPEAT_FACTOR)
