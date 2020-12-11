@@ -37,17 +37,17 @@ class Chan(BaseChan[T]):
             if not self:
                 raise ChannelClosed()
             elif len(self) < (self._q.maxlen or inf):
-                self._q.append(item)
                 async with self._rc:
                     self._rc.notify()
+                    self._q.append(item)
             else:
                 await self._sc.wait()
-                if not self:
-                    raise ChannelClosed()
-                else:
-                    self._q.append(item)
-                    async with self._rc:
+                async with self._rc:
+                    if not self:
+                        raise ChannelClosed()
+                    else:
                         self._rc.notify()
+                        self._q.append(item)
 
     async def recv(self) -> T:
         async with self._rc:
@@ -59,9 +59,9 @@ class Chan(BaseChan[T]):
                     return self._q.popleft()
             else:
                 await self._rc.wait()
-                if not self:
-                    raise ChannelClosed()
-                else:
-                    async with self._sc:
+                async with self._sc:
+                    if not self:
+                        raise ChannelClosed()
+                    else:
                         self._sc.notify()
                         return self._q.popleft()
