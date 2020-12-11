@@ -68,7 +68,7 @@ class BaseCases:
             recvs = repeat(self.ch.recv(), reps)
             cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
-            await gather(*cos)
+            await wait_for(gather(*cos), timeout=0.1)
             self.assertEqual(len(self.ch), 0)
 
 
