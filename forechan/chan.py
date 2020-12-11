@@ -8,7 +8,7 @@ T = TypeVar("T")
 
 
 class _Chan(LockedBaseChan[T]):
-    def __init__(self, maxlen: int = 1) -> None:
+    def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
         self._closed = False
@@ -63,5 +63,5 @@ class _Chan(LockedBaseChan[T]):
                         return self._q.popleft()
 
 
-def mk_chan(t: Type[T]) -> Channel[T]:
-    return _Chan[T]()
+def mk_chan(t: Type[T], maxlen: int = 1) -> Channel[T]:
+    return _Chan[T](maxlen=maxlen)
