@@ -6,9 +6,10 @@ from itertools import chain
 from typing import Awaitable, Deque, Set, Sized, Tuple, TypeVar, cast
 
 from ._base import BaseChan
-from .types import Channel, Deque, Set, TypeVar
+from .types import Channel
 
-T, U = TypeVar("T"), TypeVar("U")
+T = TypeVar("T")
+U = TypeVar("U")
 
 
 async def _with_ctx(ctx: T, co: Awaitable[U]) -> Tuple[T, U]:
@@ -30,8 +31,10 @@ class _JoinedChan(BaseChan[T]):
 
     async def close(self) -> None:
         await gather(*(chan.close() for chan in self._chans))
-        for mut_seq in (self._chans, self._available_ch, self._done, self._pending):
-            mut_seq.clear()
+        self._chans.clear()
+        self._available_ch.clear()
+        self._done.clear()
+        self._pending.clear()
 
     async def send(self, item: T) -> None:
         await gather(*(chan.send(item) for chan in self._chans))

@@ -1,11 +1,7 @@
 from asyncio.locks import Condition
 from collections import deque
-from typing import (
-    Any,
-    AsyncIterator,
-    Deque,
-    TypeVar,
-)
+from math import inf
+from typing import Any, AsyncIterator, Deque, TypeVar
 
 from .types import Channel, ChannelClosed
 
@@ -55,7 +51,7 @@ class Chan(BaseChan[T]):
     async def send(self, item: T) -> None:
         if not self:
             raise ChannelClosed()
-        elif len(self) < self._q.maxlen:
+        elif len(self) < (self._q.maxlen or inf):
             self._q.append(item)
             self._recv_cond.notify()
         else:

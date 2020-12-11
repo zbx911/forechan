@@ -3,23 +3,24 @@ from typing import AsyncIterator, Callable, Generic, TypeVar
 
 from ._base import BaseChan
 from .chan import Chan
-from .types import Channel, ChannelClosed, TypeVar
+from .types import Channel, ChannelClosed
 
-T, U = TypeVar("T"), TypeVar("U")
+T = TypeVar("T")
+U = TypeVar("U")
 
 
-class _TransChan(BaseChan[T], Generic[U]):
+class _TransChan(BaseChan[T], Generic[T, U]):
     def __init__(
         self,
         trans: Callable[[AsyncIterator[U]], AsyncIterator[T]],
         chan: Channel[U],
     ) -> None:
         self._q = chan
-        self._buf = Chan[T]()
+        self._buf: Channel[T] = Chan[T]()
         self._it = trans(chan)
 
     def __bool__(self) -> bool:
-        return self._q and self._buf
+        return bool(self._q and self._buf)
 
     def __len__(self) -> int:
         return len(self._q) + len(self._buf)
