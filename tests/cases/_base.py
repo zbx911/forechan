@@ -5,6 +5,7 @@ from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Channel, ChannelClosed
+from ..consts import SMOL_TIME
 from ..da import extract_testcases
 
 
@@ -72,12 +73,12 @@ class BaseCases:
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await self.ch.send(1)
-                await wait_for(self.ch.send(1), timeout=0.01)
+                await wait_for(self.ch.send(1), timeout=SMOL_TIME)
 
     class EmptyRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
-                await wait_for(self.ch.recv(), timeout=0.01)
+                await wait_for(self.ch.recv(), timeout=SMOL_TIME)
 
     class ManySendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
@@ -92,7 +93,7 @@ class BaseCases:
             recvs = repeat(self.ch.recv(), reps)
             cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
-            await wait_for(gather(*cos), timeout=0.1)
+            await wait_for(gather(*cos), timeout=SMOL_TIME)
             self.assertEqual(len(self.ch), 0)
 
 
