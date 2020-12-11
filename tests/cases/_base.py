@@ -1,8 +1,8 @@
-from inspect import getmembers, isclass
-from typing import Iterator, Protocol, Type
+from typing import Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Channel
+from ..da import extract_testcases
 
 
 class HasChannel(Protocol):
@@ -25,10 +25,4 @@ class BaseCases:
             self.assertEqual(1, 1)
 
 
-def _every_basecase() -> Iterator[Type]:
-    for _, member in getmembers(BaseCases):
-        if isclass(member) and issubclass(member, IsolatedAsyncioTestCase):
-            yield member
-
-
-BASE_CASES = tuple(_every_basecase())
+BASE_CASES = tuple(extract_testcases(BaseCases))
