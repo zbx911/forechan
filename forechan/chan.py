@@ -56,7 +56,7 @@ class Chan(BaseChan[T]):
             elif len(self):
                 async with self._sc:
                     self._sc.notify()
-                return self._q.popleft()
+                    return self._q.popleft()
             else:
                 await self._rc.wait()
                 if not self:
@@ -64,4 +64,4 @@ class Chan(BaseChan[T]):
                 else:
                     async with self._sc:
                         self._sc.notify()
-                    return self._q.popleft()
+                        return self._q.popleft()
