@@ -1,8 +1,8 @@
-from asyncio.tasks import gather
-from typing import AsyncIterator, Callable, Generic, TypeVar
+from asyncio.locks import Condition
+from collections import deque
+from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
 
 from ._base import BaseChan
-from .chan import Chan
 from .types import Channel, ChannelClosed
 
 T = TypeVar("T")
@@ -15,41 +15,63 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         trans: Callable[[AsyncIterator[U]], AsyncIterator[T]],
         chan: Channel[U],
     ) -> None:
-        self._q = chan
-        self._buf: Channel[T] = Chan[T]()
         self._it = trans(chan)
+        self._p = chan
+        self._q: Deque[T] = deque()
+        self._sc = Condition()
+        self._rc = Condition()
 
     @property
     def maxlen(self) -> int:
-        return 2
+        return self._p.maxlen
 
     def __bool__(self) -> bool:
-        return bool(self._q and self._buf)
+        return bool(self._p)
 
     def __len__(self) -> int:
-        return len(self._q) + len(self._buf)
+        return len(self._p) + len(self._q)
 
     async def close(self) -> None:
-        await gather(self._q.close(), self._buf.close())
+        await self._p.close()
 
     async def send(self, item: T) -> None:
-        await self._buf.send(item)
+        async with self._sc:
+            if not self:
+                raise ChannelClosed()
+            elif len(self) < self.maxlen:
+                async with self._rc:
+                    self._rc.notify()
+                    self._q.append(item)
+            else:
+                await self._sc.wait()
+                async with self._rc:
+                    if not self:
+                        raise ChannelClosed()
+                    else:
+                        self._rc.notify()
+                        self._q.append(item)
 
-    async def recv(self) -> T:
-        async def cont() -> T:
-            try:
-                return await self._it.__anext__()
-            except StopAsyncIteration:
-                raise RuntimeError()
-
+    async def _recv(self) -> T:
         if not self:
             raise ChannelClosed()
+        elif len(self._p):
+            async with self._sc:
+                self._sc.notify()
+                try:
+                    return await self._it.__anext__()
+                except StopAsyncIteration:
+                    raise RuntimeError()
         elif len(self._q):
-            return await cont()
-        elif len(self._buf):
-            return await self._buf.recv()
+            async with self._sc:
+                self._sc.notify()
+                return self._q.popleft()
         else:
-            return await cont()
+            await self._rc.wait()
+            return await self._recv()
+
+    async def recv(self) -> T:
+        async with self._rc:
+            return await self._recv()
 
 
 def trans(

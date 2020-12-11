@@ -8,7 +8,7 @@ from ._base import BASE_CASES, Channel, HasChannel
 class BaseSetup:
     class SetupChan(TestCase, HasChannel):
         def setUp(self) -> None:
-            self.ch: Channel = Chan()
+            self.ch: Channel[int] = Chan[int]()
 
 
 TEST_MATRIX = polyclass_matrix(extract_testcases(BaseSetup), BASE_CASES)
