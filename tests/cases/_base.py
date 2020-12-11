@@ -21,6 +21,30 @@ class BaseCases:
             await self.ch.close()
             self.assertFalse(self.ch)
 
+        async def test_3(self) -> None:
+            await self.ch.send(1)
+
+            async def c1() -> None:
+                with self.assertRaises(ChannelClosed):
+                    await self.ch.send(1)
+
+            async def c2() -> None:
+                with self.assertRaises(ChannelClosed):
+                    await self.ch.send(1)
+
+            await gather(c1(), c2(), self.ch.close())
+
+        async def test_4(self) -> None:
+            async def c1() -> None:
+                with self.assertRaises(ChannelClosed):
+                    await self.ch.recv()
+
+            async def c2() -> None:
+                with self.assertRaises(ChannelClosed):
+                    await self.ch.recv()
+
+            await gather(c1(), c2(), self.ch.close())
+
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             await self.ch.send(1)

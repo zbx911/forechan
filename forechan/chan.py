@@ -1,4 +1,5 @@
 from asyncio.locks import Condition
+from asyncio.tasks import gather
 from collections import deque
 from math import inf
 from typing import Deque, TypeVar
@@ -26,11 +27,16 @@ class Chan(BaseChan[T]):
             return 0
 
     async def close(self) -> None:
+        async def c1() -> None:
+            async with self._sc:
+                self._sc.notify_all()
+
+        async def c2() -> None:
+            async with self._rc:
+                self._rc.notify_all()
+
         self._closed = True
-        async with self._sc:
-            self._sc.notify_all()
-        async with self._rc:
-            self._rc.notify_all()
+        await gather(c1(), c2())
 
     async def send(self, item: T) -> None:
         async with self._sc:
