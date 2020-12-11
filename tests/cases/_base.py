@@ -1,7 +1,7 @@
 from asyncio import TimeoutError, gather, wait_for
 from itertools import repeat
 from random import shuffle
-from typing import Protocol
+from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Channel, ChannelClosed
@@ -63,10 +63,10 @@ class BaseCases:
             self.assertEqual(len(self.ch), 0)
 
         async def test_2(self) -> None:
-            reps = 5
+            reps = 100
             sends = repeat(self.ch.send(1), reps)
             recvs = repeat(self.ch.recv(), reps)
-            cos = [*sends, *recvs]
+            cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
             await gather(*cos)
             self.assertEqual(len(self.ch), 0)
