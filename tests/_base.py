@@ -31,4 +31,4 @@ def _every_basecase() -> Iterator[Type]:
             yield member
 
 
-BASE_CASES = _every_basecase()
+BASE_CASES = tuple(_every_basecase())
