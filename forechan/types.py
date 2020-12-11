@@ -20,7 +20,7 @@ class ChannelClosed(Exception):
 
 
 @runtime_checkable
-class Channel(Sized, AsyncIterable[T], AsyncContextManager[Channel], Protocol[T]):
+class Channel(Sized, AsyncIterable[T], Protocol[T]):
     @abstractmethod
     def __bool__(self) -> bool:
         ...
