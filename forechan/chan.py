@@ -1,21 +1,17 @@
-from asyncio.locks import Condition
-from asyncio.tasks import gather
 from collections import deque
 from typing import Deque, TypeVar, cast
 
-from ._base import BaseChan
+from ._base import LockedBaseChan
 from .types import ChannelClosed
 
 T = TypeVar("T")
 
 
-class Chan(BaseChan[T]):
+class Chan(LockedBaseChan[T]):
     def __init__(self, maxlen: int = 1) -> None:
-        super.__init__()
+        super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
         self._closed = False
-        self._sc = Condition()
-        self._rc = Condition()
 
     @property
     def maxlen(self) -> int:
@@ -28,17 +24,9 @@ class Chan(BaseChan[T]):
         return len(self._q)
 
     async def close(self) -> None:
-        async def c1() -> None:
-            async with self._sc:
-                self._sc.notify_all()
-
-        async def c2() -> None:
-            async with self._rc:
-                self._rc.notify_all()
-
         self._closed = True
         self._q.clear()
-        await gather(c1(), c2())
+        await super().close()
 
     async def send(self, item: T) -> None:
         async with self._sc:

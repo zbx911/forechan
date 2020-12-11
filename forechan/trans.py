@@ -1,26 +1,24 @@
 from asyncio import gather
-from asyncio.locks import Condition
 from collections import deque
 from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
 
-from ._base import BaseChan
+from ._base import LockedBaseChan
 from .types import Channel, ChannelClosed
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
-class _TransChan(BaseChan[T], Generic[T, U]):
+class _TransChan(LockedBaseChan[T], Generic[T, U]):
     def __init__(
         self,
         trans: Callable[[AsyncIterator[U]], AsyncIterator[T]],
         chan: Channel[U],
     ) -> None:
+        super().__init__()
         self._it = trans(chan)
         self._p = chan
         self._q: Deque[T] = deque()
-        self._sc = Condition()
-        self._rc = Condition()
 
     @property
     def maxlen(self) -> int:
@@ -33,15 +31,7 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         return len(self._p) + len(self._q)
 
     async def close(self) -> None:
-        async def c1() -> None:
-            async with self._sc:
-                self._sc.notify_all()
-
-        async def c2() -> None:
-            async with self._rc:
-                self._rc.notify_all()
-
-        await gather(c1(), c2(), self._p.close())
+        await gather(super().close(), self._p.close())
         self._q.clear()
 
     async def send(self, item: T) -> None:

@@ -1,3 +1,5 @@
+from asyncio.locks import Condition
+from asyncio.tasks import gather
 from typing import Any, AsyncIterator, TypeVar
 
 from .types import Channel, ChannelClosed
@@ -20,3 +22,20 @@ class BaseChan(Channel[T], AsyncIterator[T]):
             return await self.recv()
         except ChannelClosed:
             raise StopAsyncIteration()
+
+
+class LockedBaseChan(BaseChan[T]):
+    def __init__(self) -> None:
+        self._sc = Condition()
+        self._rc = Condition()
+
+    async def close(self) -> None:
+        async def c1() -> None:
+            async with self._sc:
+                self._sc.notify_all()
+
+        async def c2() -> None:
+            async with self._rc:
+                self._rc.notify_all()
+
+        await gather(c1(), c2())
