@@ -13,6 +13,14 @@ class HasChannel(Protocol):
 
 
 class BaseCases:
+    class Close(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            self.assertTrue(self.ch)
+
+        async def test_2(self) -> None:
+            await self.ch.close()
+            self.assertFalse(self.ch)
+
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             await self.ch.send(1)
