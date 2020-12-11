@@ -16,7 +16,10 @@ for FILE in "${ALL_FILES[@]}";
 do
   case "$FILE" in
     *.py)
-      PYTHON_FILES+=("$PWD/$FILE")
+      if [[ -f $FILE ]]
+      then
+        PYTHON_FILES+=("$PWD/$FILE")
+      fi
       ;;
     *)
       ;;
