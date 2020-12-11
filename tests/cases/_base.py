@@ -5,7 +5,7 @@ from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Channel, ChannelClosed
-from ..consts import SMOL_TIME
+from ..consts import REPEAT_FACTOR, SMOL_TIME, MODICUM_TIME
 from ..da import extract_testcases
 
 
@@ -88,12 +88,11 @@ class BaseCases:
             self.assertEqual(len(self.ch), 0)
 
         async def test_2(self) -> None:
-            reps = 100
-            sends = repeat(self.ch.send(1), reps)
-            recvs = repeat(self.ch.recv(), reps)
+            sends = repeat(self.ch.send(1), REPEAT_FACTOR)
+            recvs = repeat(self.ch.recv(), REPEAT_FACTOR)
             cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
-            await wait_for(gather(*cos), timeout=SMOL_TIME)
+            await wait_for(gather(*cos), timeout=MODICUM_TIME)
             self.assertEqual(len(self.ch), 0)
 
 
