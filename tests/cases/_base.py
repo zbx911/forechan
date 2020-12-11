@@ -1,4 +1,6 @@
-from asyncio import TimeoutError, wait_for
+from asyncio import TimeoutError, gather, wait_for
+from itertools import repeat
+from random import shuffle
 from typing import Protocol
 from unittest import IsolatedAsyncioTestCase
 
@@ -44,6 +46,22 @@ class BaseCases:
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await wait_for(self.ch.recv(), timeout=0.01)
+
+    class ManySendRecv(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            await self.ch.send(1)
+            await gather(self.ch.send(1), self.ch.recv())
+            await self.ch.recv()
+            self.assertEqual(len(self.ch), 0)
+
+        async def test_2(self) -> None:
+            reps = 5
+            sends = repeat(self.ch.send(1), reps)
+            recvs = repeat(self.ch.recv(), reps)
+            cos = [*sends, *recvs]
+            shuffle(cos)
+            await gather(*cos)
+            self.assertEqual(len(self.ch), 0)
 
 
 BASE_CASES = tuple(extract_testcases(BaseCases))
