@@ -19,6 +19,10 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         self._buf: Channel[T] = Chan[T]()
         self._it = trans(chan)
 
+    @property
+    def maxlen(self) -> int:
+        return 2
+
     def __bool__(self) -> bool:
         return bool(self._q and self._buf)
 

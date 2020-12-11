@@ -23,6 +23,10 @@ class _JoinedChan(BaseChan[T]):
         self._done: Deque[T] = deque()
         self._pending: Set[Future[Tuple[Channel[T], T]]] = set()
 
+    @property
+    def maxlen(self) -> int:
+        return 2
+
     def __bool__(self) -> bool:
         return all(chan for chan in self._chans)
 

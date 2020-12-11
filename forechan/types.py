@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 from typing import (
     Any,
     AsyncContextManager,
@@ -21,6 +21,10 @@ class ChannelClosed(Exception):
 
 @runtime_checkable
 class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
+    @abstractproperty
+    def maxlen(self) -> int:
+        ...
+
     @abstractmethod
     def __bool__(self) -> bool:
         ...
