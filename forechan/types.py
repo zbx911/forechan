@@ -20,7 +20,7 @@ class ChannelClosed(Exception):
 
 
 @runtime_checkable
-class Channel(Sized, AsyncIterable[T], Protocol[T]):
+class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractmethod
     def __bool__(self) -> bool:
         ...
@@ -29,13 +29,13 @@ class Channel(Sized, AsyncIterable[T], Protocol[T]):
     async def __anext__(self) -> T:
         ...
 
-    # @abstractmethod
-    # async def __aenter__(self) -> Channel[T]:
-    #     ...
+    @abstractmethod
+    async def __aenter__(self) -> Channel[T]:
+        ...
 
-    # @abstractmethod
-    # async def __aexit__(self, *_: Any) -> None:
-    #     ...
+    @abstractmethod
+    async def __aexit__(self, *_: Any) -> None:
+        ...
 
     @abstractmethod
     async def close(self) -> None:
