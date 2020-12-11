@@ -1,4 +1,4 @@
-from asyncio import wait_for
+from asyncio import TimeoutError, wait_for
 from typing import Protocol
 from unittest import IsolatedAsyncioTestCase
 
@@ -39,6 +39,11 @@ class BaseCases:
             with self.assertRaises(TimeoutError):
                 await self.ch.send(1)
                 await wait_for(self.ch.send(1), timeout=0.01)
+
+    class EmptyRecv(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            with self.assertRaises(TimeoutError):
+                await wait_for(self.ch.recv(), timeout=0.01)
 
 
 BASE_CASES = tuple(extract_testcases(BaseCases))
