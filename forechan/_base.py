@@ -1,13 +1,18 @@
 from asyncio.locks import Condition
 from asyncio.tasks import gather
-from typing import Any, AsyncIterator, TypeVar
+from typing import Any, AsyncIterator, MutableSet, TypeVar
+from weakref import WeakSet
 
-from .types import Channel, ChannelClosed
+from .types import Channel, ChannelClosed, Notifier, Unsub
 
 T = TypeVar("T")
 
 
 class BaseChan(Channel[T], AsyncIterator[T]):
+    def __init__(self) -> None:
+        self._ss: MutableSet[Notifier] = WeakSet()
+        self._rs: MutableSet[Notifier] = WeakSet()
+
     async def __aenter__(self) -> Channel[T]:
         return self
 
@@ -22,6 +27,14 @@ class BaseChan(Channel[T], AsyncIterator[T]):
             return await self.recv()
         except ChannelClosed:
             raise StopAsyncIteration()
+
+    async def _on_send(self, notif: Notifier) -> Unsub:
+        self._ss.add(notif)
+        return lambda: self._ss.remove(notif)
+
+    async def _on_recv(self, notif: Notifier) -> Unsub:
+        self._rs.add(notif)
+        return lambda: self._rs.remove(notif)
 
 
 class LockedBaseChan(BaseChan[T]):

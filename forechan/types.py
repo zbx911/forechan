@@ -5,18 +5,23 @@ from typing import (
     Any,
     AsyncContextManager,
     AsyncIterable,
+    Awaitable,
+    Callable,
     Protocol,
     Sized,
     TypeVar,
     runtime_checkable,
 )
 
-
 T = TypeVar("T")
 
 
 class ChannelClosed(Exception):
     pass
+
+
+Notifier = Callable[[], Awaitable[None]]
+Unsub = Callable[[], None]
 
 
 @runtime_checkable
@@ -52,3 +57,11 @@ class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractmethod
     async def recv(self) -> T:
         ...
+
+    @abstractmethod
+    async def _on_send(self, notif: Notifier) -> Unsub:
+        pass
+
+    @abstractmethod
+    async def _on_recv(self, notif: Notifier) -> Unsub:
+        pass
