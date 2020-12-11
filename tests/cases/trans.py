@@ -30,6 +30,12 @@ class UpstreamSend(TransBaseSetup.SetupChan):
         await gather(self.ch.recv(), self.p.send(1))
 
     async def test_2(self) -> None:
+        await self.p.send(1)
+        await self.ch.recv()
+        await self.p.send(1)
+        await self.ch.recv()
+
+    async def test_3(self) -> None:
         sends = repeat(self.p.send(1), REPEAT_FACTOR)
         recvs = repeat(self.ch.recv(), REPEAT_FACTOR)
         cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
