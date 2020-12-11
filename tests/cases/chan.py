@@ -1,8 +1,8 @@
 from unittest import IsolatedAsyncioTestCase
 
-from ..forechan.chan import Chan
+from ...forechan.chan import Chan
 from ._base import BASE_CASES, Channel, HasChannel
-from ._da import mk_loader, polyclass_matrix
+from ..da import mk_loader, polyclass_matrix
 
 
 class BaseSetup:

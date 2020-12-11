@@ -2,7 +2,7 @@ from inspect import getmembers, isclass
 from typing import Iterator, Protocol, Type
 from unittest import IsolatedAsyncioTestCase
 
-from ..forechan.types import Channel
+from ...forechan.types import Channel
 
 
 class HasChannel(Protocol):
