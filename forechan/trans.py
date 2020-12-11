@@ -1,3 +1,4 @@
+from asyncio import gather
 from asyncio.locks import Condition
 from collections import deque
 from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
@@ -32,7 +33,16 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         return len(self._p) + len(self._q)
 
     async def close(self) -> None:
-        await self._p.close()
+        async def c1() -> None:
+            async with self._sc:
+                self._sc.notify_all()
+
+        async def c2() -> None:
+            async with self._rc:
+                self._rc.notify_all()
+
+        await gather(c1(), c2(), self._p.close())
+        self._q.clear()
 
     async def send(self, item: T) -> None:
         async with self._sc:

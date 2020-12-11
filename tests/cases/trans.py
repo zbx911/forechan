@@ -12,12 +12,12 @@ async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
         yield n + 1
 
 
-class BaseSetup:
+class TransBaseSetup:
     class SetupChan(TestCase, HasChannel):
         def setUp(self) -> None:
             self.p: Channel[int] = Chan[int]()
             self.ch: Channel[int] = trans(xform, chan=self.p)
 
 
-TEST_MATRIX = polyclass_matrix(extract_testcases(BaseSetup), BASE_CASES)
+TEST_MATRIX = polyclass_matrix(extract_testcases(TransBaseSetup), BASE_CASES)
 load_tests = mk_loader(*TEST_MATRIX)

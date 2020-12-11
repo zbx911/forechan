@@ -11,6 +11,7 @@ T = TypeVar("T")
 
 class Chan(BaseChan[T]):
     def __init__(self, maxlen: int = 1) -> None:
+        super.__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
         self._closed = False
         self._sc = Condition()
@@ -24,10 +25,7 @@ class Chan(BaseChan[T]):
         return not self._closed
 
     def __len__(self) -> int:
-        if self:
-            return len(self._q)
-        else:
-            return 0
+        return len(self._q)
 
     async def close(self) -> None:
         async def c1() -> None:
@@ -39,6 +37,7 @@ class Chan(BaseChan[T]):
                 self._rc.notify_all()
 
         self._closed = True
+        self._q.clear()
         await gather(c1(), c2())
 
     async def send(self, item: T) -> None:
