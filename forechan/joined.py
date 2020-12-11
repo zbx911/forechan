@@ -8,7 +8,7 @@ from typing import Awaitable, Deque, Set, Sized, Tuple, TypeVar, cast
 from ._base import BaseChan
 from .types import Channel, Deque, Set, TypeVar
 
-T = TypeVar("T")
+T, U = TypeVar("T"), TypeVar("U")
 
 
 async def _with_ctx(ctx: T, co: Awaitable[U]) -> Tuple[T, U]:

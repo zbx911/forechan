@@ -8,6 +8,7 @@ cd "$(dirname "$0")" || exit 1
 
 FILES=(
   forechan/*.py
+  tests/*.py
 )
 
 mypy -- "${FILES[@]}"

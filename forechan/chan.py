@@ -9,7 +9,7 @@ from typing import (
 
 from .types import Channel, ChannelClosed
 
-T, U = TypeVar("T"), TypeVar("U")
+T = TypeVar("T")
 
 
 class BaseChan(Channel[T]):
