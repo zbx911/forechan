@@ -20,6 +20,8 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         self._p = chan
         self._q: Deque[T] = deque()
 
+        self._p._on_send(self._on_upstream_send)
+
     @property
     def maxlen(self) -> int:
         return self._p.maxlen
@@ -35,21 +37,26 @@ class _TransChan(BaseChan[T], Generic[T, U]):
         self._q.clear()
 
     async def send(self, item: T) -> None:
-        async with self._sc:
-            if not self:
-                raise ChannelClosed()
-            elif len(self) < self.maxlen:
-                async with self._rc:
-                    self._rc.notify()
-                    self._q.append(item)
-            else:
-                await self._sc.wait()
-                async with self._rc:
-                    if not self:
-                        raise ChannelClosed()
-                    else:
+        async with self._notify_send():
+            async with self._sc:
+                if not self:
+                    raise ChannelClosed()
+                elif len(self) < self.maxlen:
+                    async with self._rc:
                         self._rc.notify()
                         self._q.append(item)
+                else:
+                    await self._sc.wait()
+                    async with self._rc:
+                        if not self:
+                            raise ChannelClosed()
+                        else:
+                            self._rc.notify()
+                            self._q.append(item)
+
+    async def _on_upstream_send(self) -> None:
+        async with self._rc:
+            self._rc.notify()
 
     async def _recv(self) -> T:
         if not self:
@@ -70,8 +77,9 @@ class _TransChan(BaseChan[T], Generic[T, U]):
             return await self._recv()
 
     async def recv(self) -> T:
-        async with self._rc:
-            return await self._recv()
+        async with self._notify_recv():
+            async with self._rc:
+                return await self._recv()
 
 
 def trans(

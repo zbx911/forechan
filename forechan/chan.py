@@ -29,7 +29,7 @@ class _Chan(BaseChan[T]):
         await super().close()
 
     async def send(self, item: T) -> None:
-        with self._notify_send():
+        async with self._notify_send():
             async with self._sc:
                 if not self:
                     raise ChannelClosed()
@@ -47,7 +47,7 @@ class _Chan(BaseChan[T]):
                             self._q.append(item)
 
     async def recv(self) -> T:
-        with self._notify_recv():
+        async with self._notify_recv():
             async with self._rc:
                 if not self:
                     raise ChannelClosed()
