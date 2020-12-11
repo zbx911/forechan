@@ -1,28 +1,12 @@
 from asyncio.locks import Condition
 from collections import deque
 from math import inf
-from typing import Any, AsyncIterator, Deque, TypeVar
+from typing import Deque, TypeVar
 
-from .types import Channel, ChannelClosed
+from ._base import BaseChan
+from .types import ChannelClosed
 
 T = TypeVar("T")
-
-
-class BaseChan(Channel[T]):
-    async def __aenter__(self) -> Channel[T]:
-        return self
-
-    async def __aexit__(self, *_: Any) -> None:
-        await self.close()
-
-    def __aiter__(self) -> AsyncIterator[T]:
-        return self
-
-    async def __anext__(self) -> T:
-        try:
-            return await self.recv()
-        except ChannelClosed:
-            raise StopAsyncIteration()
 
 
 class Chan(BaseChan[T]):

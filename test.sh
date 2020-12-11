@@ -6,8 +6,4 @@ set -o pipefail
 
 cd "$(dirname "$0")" || exit 1
 
-FILES=(
-  forechan/*.py
-)
-
-mypy -- "${FILES[@]}"
+python -m tests "${@}" < /dev/stdin

@@ -5,7 +5,7 @@ from .types import Channel, ChannelClosed
 T = TypeVar("T")
 
 
-class BaseChan(Channel[T]):
+class BaseChan(Channel[T], AsyncIterator[T]):
     async def __aenter__(self) -> Channel[T]:
         return self
 
