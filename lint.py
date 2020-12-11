@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-from os import sep, walk
-from os.path import dirname, join, realpath, splitext
+from functools import partial
+from os import chdir, sep, walk
+from os.path import dirname, join, realpath, relpath, splitext
 from subprocess import PIPE, run
 from typing import Iterator, Mapping, Set, Tuple
 
 _dir_ = dirname(realpath(__file__))
+chdir(_dir_)
 
 
 def ancestors(path: str) -> Iterator[str]:
@@ -24,7 +26,6 @@ def git_ls() -> Mapping[str, str]:
         ("git", "status", "--ignored", "--renames", "--porcelain", "-z"),
         stdout=PIPE,
         text=True,
-        cwd=_dir_,
     )
     proc.check_returncode()
     it = iter(proc.stdout.split("\0"))
@@ -36,7 +37,7 @@ def git_ls() -> Mapping[str, str]:
             if "R" in prefix:
                 next(it, None)
 
-    entries = {join(_dir_, file): prefix for prefix, file in cont()}
+    entries = {file: prefix for prefix, file in cont()}
     return entries
 
 
@@ -46,15 +47,9 @@ def git_ignored() -> Iterator[str]:
             yield path
 
 
-def ls(base: str = _dir_) -> Iterator[str]:
-    for root, _, files in walk(base):
-        for fn in files:
-            yield join(root, fn)
-
-
-def tracked_files() -> Iterator[str]:
-    ignored = {*git_ignored(), join(_dir_, ".git")}
-    for path in ls():
+def tracked_files(search_set: Iterator[str]) -> Iterator[str]:
+    ignored = {*git_ignored(), ".git"}
+    for path in search_set:
         for parent in ancestors(path):
             if parent in ignored:
                 break
@@ -62,16 +57,26 @@ def tracked_files() -> Iterator[str]:
             yield path
 
 
-def tracked_files_with_exts(exts: Set[str]) -> Iterator[str]:
-    for name in tracked_files():
+def filter_exts(search_set: Iterator[str], exts: Set[str]) -> Iterator[str]:
+    for name in search_set:
         _, ext = splitext(name)
         if ext in exts:
             yield name
 
 
+def ls(base: str) -> Iterator[str]:
+    for root, _, files in walk(base):
+        prefix = relpath(root, start=base)
+        for fn in files:
+            yield join(prefix, fn)
+
+
 def main() -> None:
-    py_files = tracked_files_with_exts({".py"})
-    proc = run(("mypy", "--", *py_files), cwd=_dir_)
+    search_set = ls(_dir_)
+    tracked = tracked_files(search_set)
+    py_files = filter_exts(tracked, exts={".py"})
+    abs_paths = map(partial(join, _dir_), py_files)
+    proc = run(("mypy", "--", *abs_paths))
     exit(proc.returncode)
 
 
