@@ -1,23 +1,47 @@
-from asyncio.locks import BoundedSemaphore
 from asyncio.tasks import create_task
-from typing import Any, AsyncIterator, Callable, Sequence, Tuple, TypeVar
+from typing import (
+    Any,
+    AsyncIterator,
+    Callable,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from .chan import chan
 from .types import Chan, ChanClosed
+from .wait_group import wait_group
 
 T = TypeVar("T")
 U = TypeVar("U")
+V = TypeVar("V")
 
 
-async def select(ch: Chan[Any], *chs: Chan[Any]) -> Chan[Tuple[Chan, Any]]:
+@overload
+async def select(
+    ch1: Chan[T], ch2: Chan[U]
+) -> Chan[Tuple[Union[Chan[T], Chan[U]], Union[T, U]]]:
+    ...
+
+
+@overload
+async def select(
+    ch1: Chan[T], ch2: Chan[U], ch3: Chan[V]
+) -> Chan[Tuple[Union[Chan[T], Chan[U], Chan[V]], Union[T, U, V]]]:
+    ...
+
+
+async def select(ch: Chan[Any], *chs: Chan[Any]) -> Chan[Tuple[Chan[Any], Any]]:
     out: Chan[Any] = chan()
+    wg = wait_group()
     channels: Sequence[Chan[Any]] = tuple((ch, *chs))
-    sem = BoundedSemaphore(len(channels))
 
     for c in channels:
 
         async def cont() -> None:
-            async with sem:
+            with wg:
                 async for item in c:
                     try:
                         await out.send((c, item))
@@ -27,7 +51,8 @@ async def select(ch: Chan[Any], *chs: Chan[Any]) -> Chan[Tuple[Chan, Any]]:
         create_task(cont())
 
     async def close() -> None:
-        pass
+        await wg.wait()
+        out.close()
 
     create_task(close())
     return out

@@ -39,7 +39,6 @@ class WaitGroup(WaitGroupBaseSetup.SetupWG):
                 nonlocal i
                 with self.wg:
                     i -= 1
-                    print(i)
 
             create_task(cont())
 

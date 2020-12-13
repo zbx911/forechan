@@ -1,3 +1,4 @@
+from asyncio import sleep
 from asyncio.locks import Event
 from typing import Any
 
@@ -23,6 +24,7 @@ class _WaitGroup(WaitGroup):
             raise ValueError()
 
     async def wait(self) -> None:
+        await sleep(0)
         if len(self):
             await self._event.wait()
 
