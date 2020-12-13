@@ -6,7 +6,7 @@ from typing import Any, AsyncIterator, Awaitable, MutableSequence
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
-from ...forechan.operations import trans
+from ...forechan.trans import trans
 from ...forechan.types import Chan
 from ..consts import MODICUM_TIME, REPEAT_FACTOR
 from ..da import extract_testcases, mk_loader, polyclass_matrix
