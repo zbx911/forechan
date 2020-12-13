@@ -1,16 +1,21 @@
 from itertools import count
-from typing import Awaitable, Callable, Tuple, Type, TypeVar
+from typing import Awaitable, Callable, Optional, Tuple, Type, TypeVar
 
 from .chan import chan
 from .types import Chan
 
 T = TypeVar("T")
-
 U = TypeVar("U")
 
 
 class OutdatedError(Exception):
     pass
+
+
+def mk_pair(
+    t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
+) -> Tuple[Chan[T], Chan[U]]:
+    return chan(t), chan(u)
 
 
 def mk_req(
