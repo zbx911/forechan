@@ -1,40 +1,12 @@
 from asyncio.locks import Event
 from asyncio.tasks import create_task
 from itertools import chain
-from typing import Any, Set, Tuple, TypeVar, Union, overload
+from typing import Any, Set, Tuple
 
 from .chan import chan
 from .operations import close
-from .types import Chan
+from .types import Chan, ChanClosed
 from .wait_group import wait_group
-
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-W = TypeVar("W")
-
-
-# @overload
-# async def select(
-#     ch1: Chan[T], ch2: Chan[U], cascade_close: bool = True
-# ) -> Chan[Union[Tuple[Chan[T], T], Tuple[Chan[U], U]]]:
-#     ...
-
-
-# @overload
-# async def select(
-#     ch1: Chan[T], ch2: Chan[U], ch3: Chan[V], cascade_close: bool = True
-# ) -> Chan[Union[Tuple[Chan[T], T], Tuple[Chan[U], U], Tuple[Chan[V], V]]]:
-#     ...
-
-
-# @overload
-# async def select(
-#     ch1: Chan[T], ch2: Chan[U], ch3: Chan[V], ch4: Chan[W], cascade_close: bool = True
-# ) -> Chan[
-#     Union[Tuple[Chan[T], T], Tuple[Chan[U], U], Tuple[Chan[V], V], Tuple[Chan[W], W]]
-# ]:
-#     ...
 
 
 async def select(
@@ -42,7 +14,7 @@ async def select(
 ) -> Chan[Tuple[Chan[Any], Any]]:
     out: Chan[Any] = chan()
     wg = wait_group()
-    channels: Set[Chan[Any]] = set()
+    ready: Set[Chan[Any]] = set()
     ev = Event()
 
     async def close_upstream() -> None:
@@ -60,8 +32,11 @@ async def select(
         create_task(clo())
 
         async def notif() -> None:
-            while c:
-                await c._recvable_notif()
+            while True:
+                try:
+                    await c._recvable_notif()
+                except ChanClosed:
+                    break
 
         create_task(notif())
 
@@ -74,12 +49,15 @@ async def select(
     async def cont() -> None:
         while out:
             await ev.wait()
-            while channels:
-                c = channels.pop()
+            while ready:
+                c = ready.pop()
                 if len(c):
                     item = await c.recv()
                     ev.clear()
-                    await out.send((c, item))
+                    try:
+                        await out.send((c, item))
+                    except ChanClosed:
+                        pass
                     break
 
     create_task(cont())
