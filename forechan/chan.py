@@ -2,7 +2,17 @@ from asyncio.locks import Condition, Event
 from asyncio.tasks import gather
 from collections import deque
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Awaitable, Deque, Iterator, TypeVar, cast
+from typing import (
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Deque,
+    Iterator,
+    Optional,
+    Type,
+    TypeVar,
+    cast,
+)
 
 from .types import Chan, ChanClosed
 
@@ -121,5 +131,5 @@ class _Chan(Chan[T], AsyncIterator[T]):
         await self._nr.wait()
 
 
-def chan(maxlen: int = 1) -> Chan[T]:
+def chan(t: Optional[Type[T]] = None, maxlen: int = 1) -> Chan[T]:
     return _Chan[T](maxlen=maxlen)

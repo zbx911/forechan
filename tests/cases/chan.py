@@ -9,7 +9,7 @@ from ._base import BASE_CASES, HasChannel
 class ChanBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChannel):
         async def asyncSetUp(self) -> None:
-            self.ch: Chan[int] = chan()
+            self.ch = chan(int)
 
 
 TEST_MATRIX = polyclass_matrix(extract_testcases(ChanBaseSetup), BASE_CASES)
