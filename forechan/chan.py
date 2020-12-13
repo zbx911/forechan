@@ -13,7 +13,6 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
-        self._closed = False
         self._sc, self._rc = Condition(), Condition()
         self._nc, self._ns, self._nr = Event(), Event(), Event()
 
@@ -22,7 +21,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
         return cast(int, self._q.maxlen)
 
     def __bool__(self) -> bool:
-        return not self._closed
+        return not self._nc.is_set()
 
     def __len__(self) -> int:
         return len(self._q)
@@ -48,10 +47,9 @@ class _Chan(Chan[T], AsyncIterator[T]):
             async with self._rc:
                 self._rc.notify_all()
 
-        self._closed = True
+        self._nc.set()
         self._q.clear()
         await gather(c1(), c2())
-        self._nc.set()
 
     @contextmanager
     def _sent_handler(self) -> Iterator[None]:

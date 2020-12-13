@@ -9,6 +9,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    Set,
     overload,
 )
 
@@ -116,14 +117,35 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
     if n < 2:
         raise ValueError()
 
-    channels: MutableSequence[Chan[T]] = [*islice(iter(chan, None), n)]
+    channels: Set[Chan[T]] = {*islice(iter(chan, None), n)}
+    wg = wait_group()
 
-    async def cont() -> None:
+    for out in channels:
+
+        async def cont() -> None:
+            with wg:
+                await out._closed_notif()
+                channels.remove(out)
+
+        create_task(cont())
+
+    async def close() -> None:
+        await wg.wait()
+        await _close(ch, close=cascade_close)
+
+    create_task(close())
+
+    async def co() -> None:
         async for item in ch:
-            channels[:] = [out for out in channels if out]
-            if not channels:
-                await _close(ch, close=cascade_close)
-                break
 
-    create_task(cont())
-    return channels
+            async def send(out: Chan[T]) -> None:
+                try:
+                    await out.send(item)
+                except ChanClosed:
+                    raise
+
+            if channels:
+                await gather(*map(send, channels))
+
+    create_task(co())
+    return tuple(channels)
