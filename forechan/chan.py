@@ -57,10 +57,12 @@ class _Chan(Chan[T], AsyncIterator[T]):
     async def close(self) -> None:
         async def c1() -> None:
             async with self._sc:
+                self._ns.set()
                 self._sc.notify_all()
 
         async def c2() -> None:
             async with self._rc:
+                self._nr.set()
                 self._rc.notify_all()
 
         self._nc.set()
@@ -126,9 +128,13 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     async def _sendable_notif(self) -> None:
         await self._ns.wait()
+        if not self:
+            raise ChanClosed()
 
     async def _recvable_notif(self) -> None:
         await self._nr.wait()
+        if not self:
+            raise ChanClosed()
 
 
 def chan(t: Optional[Type[T]] = None, maxlen: int = 1) -> Chan[T]:
