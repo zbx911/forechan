@@ -57,11 +57,3 @@ class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractmethod
     async def recv(self) -> T:
         ...
-
-    @abstractmethod
-    def _on_send(self, notif: Notifier) -> Unsub:
-        pass
-
-    @abstractmethod
-    def _on_recv(self, notif: Notifier) -> Unsub:
-        pass
