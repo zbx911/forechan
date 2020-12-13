@@ -4,7 +4,7 @@ from random import shuffle
 from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.types import Chan, ChanClosed
+from ...forechan.types import Chan, ChanClosed, ChanEmpty
 from ..consts import REPEAT_FACTOR, SMOL_TIME, MODICUM_TIME
 from ..da import extract_testcases
 
@@ -45,6 +45,16 @@ class BaseCases:
                     await self.ch.recv()
 
             await gather(c1(), c2(), self.ch.close())
+
+    class Peak(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            with self.assertRaises(ChanEmpty):
+                self.ch.peek()
+
+        async def test_2(self) -> None:
+            await self.ch.send(1)
+            head = self.ch.peek()
+            self.assertEqual(head, 1)
 
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
