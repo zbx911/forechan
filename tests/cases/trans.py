@@ -20,9 +20,9 @@ async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
 
 class TransBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChannel):
-        def setUp(self) -> None:
+        async def asyncSetUp(self) -> None:
             self.p: Chan[int] = chan()
-            self.ch = trans(xform, ch=self.p)
+            self.ch = await trans(xform, ch=self.p)
 
 
 class UpstreamSend(TransBaseSetup.SetupChan):

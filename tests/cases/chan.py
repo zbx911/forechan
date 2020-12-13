@@ -8,7 +8,7 @@ from ._base import BASE_CASES, HasChannel
 
 class ChanBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChannel):
-        def setUp(self) -> None:
+        async def asyncSetUp(self) -> None:
             self.ch: Chan[int] = chan()
 
 
