@@ -18,10 +18,11 @@ class _WaitGroup(WaitGroup):
 
     def __exit__(self, *_: Any) -> None:
         self._counter -= 1
-        if not len(self):
-            self._event.set()
-        elif self._counter < 0:
+
+        if self._counter < 0:
             raise ValueError()
+        elif len(self) == 0:
+            self._event.set()
 
     async def wait(self) -> None:
         await sleep(0)

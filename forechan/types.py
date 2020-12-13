@@ -44,6 +44,18 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
     async def recv(self) -> T:
         ...
 
+    @abstractmethod
+    async def _closed_notif(self) -> None:
+        ...
+
+    @abstractmethod
+    async def _sendable_notif(self) -> None:
+        ...
+
+    @abstractmethod
+    async def _recvable_notif(self) -> None:
+        ...
+
 
 @runtime_checkable
 class WaitGroup(Sized, ContextManager[None], Protocol):
