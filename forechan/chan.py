@@ -14,7 +14,7 @@ from typing import (
     cast,
 )
 
-from .types import Chan, ChanClosed, ChanEmpty
+from .types import Chan, ChanClosed, ChanEmpty, ChanFull
 
 T = TypeVar("T")
 
@@ -52,10 +52,16 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __lshift__(self, item: T) -> Awaitable[None]:
         return self.send(item)
 
-    def peek(self) -> T:
+    def empty(self) -> bool:
+        return not len(self)
+
+    def full(self) -> bool:
+        return len(self) >= self.maxlen
+
+    def try_peek(self) -> T:
         if not self:
             raise ChanClosed()
-        elif not len(self):
+        elif self.empty():
             raise ChanEmpty()
         else:
             return next(iter(self._q))
@@ -81,7 +87,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
             yield None
         finally:
             self._nr.set()
-            if len(self) >= self.maxlen:
+            if self.full():
                 self._ns.clear()
 
     @contextmanager
@@ -90,7 +96,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
             yield None
         finally:
             self._ns.set()
-            if not len(self):
+            if self.empty():
                 self._nr.clear()
 
     async def send(self, item: T) -> None:
@@ -98,7 +104,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
             async with self._sc:
                 if not self:
                     raise ChanClosed()
-                elif len(self) < self.maxlen:
+                elif not self.full():
                     async with self._rc:
                         self._rc.notify()
                         self._q.append(item)
@@ -116,7 +122,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
             async with self._rc:
                 if not self:
                     raise ChanClosed()
-                elif len(self):
+                elif not self.empty():
                     async with self._sc:
                         self._sc.notify()
                         return self._q.popleft()

@@ -49,11 +49,11 @@ class BaseCases:
     class Peak(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             with self.assertRaises(ChanEmpty):
-                self.ch.peek()
+                self.ch.try_peek()
 
         async def test_2(self) -> None:
             await self.ch.send(1)
-            head = self.ch.peek()
+            head = self.ch.try_peek()
             self.assertEqual(head, 1)
 
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):

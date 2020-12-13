@@ -18,8 +18,10 @@ T = TypeVar("T")
 class ChanClosed(Exception):
     pass
 
+
 class ChanEmpty(Exception):
     pass
+
 
 class ChanFull(Exception):
     pass
@@ -44,11 +46,19 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
-    def peek(self) -> T:
+    def empty(self) -> bool:
+        ...
+
+    @abstractmethod
+    def full(self) -> bool:
         ...
 
     @abstractmethod
     async def close(self) -> None:
+        ...
+
+    @abstractmethod
+    def try_peek(self) -> T:
         ...
 
     @abstractmethod
