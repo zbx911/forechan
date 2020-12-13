@@ -20,12 +20,12 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
 
     for out in channels:
 
-        async def cont() -> None:
+        async def wg_downstream() -> None:
             with wg:
                 await out._closed_notif()
                 channels.remove(out)
 
-        create_task(cont())
+        create_task(wg_downstream())
 
     async def close_upstream() -> None:
         await wg.wait()
@@ -33,7 +33,7 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
 
     create_task(close_upstream())
 
-    async def co() -> None:
+    async def cont() -> None:
         async for item in ch:
 
             async def send(out: Chan[T]) -> None:
@@ -44,5 +44,5 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
 
             await gather(*map(send, channels))
 
-    create_task(co())
+    create_task(cont())
     return ret

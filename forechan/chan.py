@@ -2,7 +2,7 @@ from asyncio.locks import Condition, Event
 from asyncio.tasks import gather
 from collections import deque
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Deque, Iterator, TypeVar, cast
+from typing import Any, AsyncIterator, Awaitable, Deque, Iterator, TypeVar, cast
 
 from .types import Chan, ChanClosed
 
@@ -37,6 +37,12 @@ class _Chan(Chan[T], AsyncIterator[T]):
             return await self.recv()
         except ChanClosed:
             raise StopAsyncIteration()
+
+    def __lshift__(self, item: T) -> Awaitable[None]:
+        return self.send(item)
+
+    def __neg__(self) -> Awaitable[T]:
+        return self.recv()
 
     async def close(self) -> None:
         async def c1() -> None:

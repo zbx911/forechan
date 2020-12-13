@@ -1,5 +1,5 @@
 from asyncio.tasks import create_task
-from typing import Any, Sequence, TypeVar
+from typing import TypeVar
 
 from .chan import chan
 from .operations import close
@@ -10,7 +10,6 @@ T = TypeVar("T")
 
 
 async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan[T]:
-    channels: Sequence[Chan[Any]] = tuple((ch, *chs))
     out: Chan[T] = chan()
 
     async def close_upstream() -> None:
@@ -21,7 +20,7 @@ async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan
 
     async def cont() -> None:
         async with out:
-            async for _, item in await select(*channels):
+            async for _, item in await select(ch, *chs):
                 try:
                     await out.send(item)
                 except ChanClosed:
