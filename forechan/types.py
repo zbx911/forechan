@@ -18,16 +18,8 @@ class ChanClosed(Exception):
     pass
 
 
-class AsyncCloseable(Protocol):
-    @abstractmethod
-    async def close(self) -> None:
-        ...
-
-
 @runtime_checkable
-class Chan(
-    Sized, AsyncIterable[T], AsyncContextManager[None], AsyncCloseable, Protocol[T]
-):
+class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
     @abstractproperty
     def maxlen(self) -> int:
         ...
@@ -38,6 +30,10 @@ class Chan(
 
     @abstractmethod
     async def __anext__(self) -> T:
+        ...
+
+    @abstractmethod
+    async def close(self) -> None:
         ...
 
     @abstractmethod

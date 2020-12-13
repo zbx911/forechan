@@ -13,7 +13,7 @@ from typing import (
 )
 
 from .chan import chan
-from .types import AsyncCloseable, Chan, ChanClosed
+from .types import Chan, ChanClosed
 from .wait_group import wait_group
 
 T = TypeVar("T")
@@ -22,9 +22,9 @@ V = TypeVar("V")
 W = TypeVar("W")
 
 
-async def _close(c: AsyncCloseable, *cs: AsyncCloseable, close: bool) -> None:
+async def _close(ch: Chan[Any], *chs: Chan[Any], close: bool) -> None:
     if close:
-        await gather(*(closable.close() for closable in chain((c,), cs)))
+        await gather(*(c.close() for c in chain((ch,), chs)))
 
 
 # @overload
@@ -90,9 +90,7 @@ async def trans(
                 try:
                     await out.send(item)
                 except ChanClosed:
-                    if cascade_close:
-                        await ch.close()
-                    break
+                    await _close(ch, close=cascade_close)
 
     create_task(cont())
     return out
@@ -108,9 +106,7 @@ async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan
                 try:
                     await out.send(item)
                 except ChanClosed:
-                    if cascade_close:
-                        await gather(*(c.close() for c in channels))
-                    break
+                    await _close(ch, *chs, close=cascade_close)
 
     create_task(cont())
     return out
@@ -123,18 +119,11 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
     channels: MutableSequence[Chan[T]] = [*islice(iter(chan, None), n)]
 
     async def cont() -> None:
-        nonlocal channels
-
         async for item in ch:
-            chs: MutableSequence[Chan[T]] = []
-            while channels:
-                c = channels.pop()
-                if c:
-                    chs.append(c)
-            channels = chs
+            channels[:] = [out for out in channels if out]
+            if not channels:
+                await _close(ch, close=cascade_close)
+                break
 
-        if cascade_close:
-            for c in channels:
-                c.close()
-
+    create_task(cont())
     return channels
