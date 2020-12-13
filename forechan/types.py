@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import abstractmethod, abstractproperty
 from typing import (
-    Any,
     AsyncContextManager,
     AsyncIterable,
     ContextManager,
@@ -19,8 +18,16 @@ class ChanClosed(Exception):
     pass
 
 
+class AsyncCloseable(Protocol):
+    @abstractmethod
+    async def close(self) -> None:
+        ...
+
+
 @runtime_checkable
-class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
+class Chan(
+    Sized, AsyncIterable[T], AsyncContextManager[None], AsyncCloseable, Protocol[T]
+):
     @abstractproperty
     def maxlen(self) -> int:
         ...
@@ -30,19 +37,7 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
-    async def __aenter__(self) -> Chan[T]:
-        ...
-
-    @abstractmethod
-    async def __aexit__(self, *_: Any) -> None:
-        ...
-
-    @abstractmethod
     async def __anext__(self) -> T:
-        ...
-
-    @abstractmethod
-    async def close(self) -> None:
         ...
 
     @abstractmethod
