@@ -1,5 +1,5 @@
 from asyncio.tasks import create_task
-from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
+from typing import AsyncIterator, Callable, TypeVar
 
 from .chan import chan
 from .types import Chan, ChanClosed
