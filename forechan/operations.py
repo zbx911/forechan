@@ -1,5 +1,6 @@
+from asyncio.locks import BoundedSemaphore
 from asyncio.tasks import create_task
-from typing import Any, AsyncIterator, Callable, Tuple, TypeVar
+from typing import Any, AsyncIterator, Callable, Sequence, Tuple, TypeVar
 
 from .chan import chan
 from .types import Chan, ChanClosed
@@ -8,8 +9,28 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
-async def select(ch: Chan[Any], *chs: Chan[Any]) -> AsyncIterator[Tuple[Chan, Any]]:
-    pass
+async def select(ch: Chan[Any], *chs: Chan[Any]) -> Chan[Tuple[Chan, Any]]:
+    out: Chan[Any] = chan()
+    channels: Sequence[Chan[Any]] = tuple((ch, *chs))
+    sem = BoundedSemaphore(len(channels))
+
+    for c in channels:
+
+        async def cont() -> None:
+            async with sem:
+                async for item in c:
+                    try:
+                        await out.send((c, item))
+                    except ChanClosed:
+                        break
+
+        create_task(cont())
+
+    async def close() -> None:
+        pass
+
+    create_task(close())
+    return out
 
 
 async def trans(
@@ -35,7 +56,7 @@ async def fan_in(ch: Chan[T], *chs: Chan[T]) -> Chan[T]:
 
     async def cont() -> None:
         async with out:
-            async for _, item in select(ch, *chs):
+            async for _, item in await select(ch, *chs):
                 try:
                     await out.send(item)
                 except ChanClosed:

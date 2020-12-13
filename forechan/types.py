@@ -51,3 +51,10 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractmethod
     async def recv(self) -> T:
         ...
+
+
+@runtime_checkable
+class WaitGroup(Sized, AsyncContextManager[None], Protocol):
+    @abstractmethod
+    async def wait(self) -> None:
+        ...
