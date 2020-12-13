@@ -5,6 +5,7 @@ from typing import (
     Any,
     AsyncContextManager,
     AsyncIterable,
+    ContextManager,
     Protocol,
     Sized,
     TypeVar,
@@ -54,7 +55,7 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
 
 @runtime_checkable
-class WaitGroup(Sized, AsyncContextManager[None], Protocol):
+class WaitGroup(Sized, ContextManager[None], Protocol):
     @abstractmethod
     async def wait(self) -> None:
         ...
