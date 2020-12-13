@@ -95,5 +95,39 @@ class BaseCases:
             await wait_for(gather(*cos), timeout=MODICUM_TIME)
             self.assertEqual(len(self.ch), 0)
 
+    class ClosedNotif(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            with self.assertRaises(TimeoutError):
+                await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
+
+        async def test_2(self) -> None:
+            await self.ch.close()
+            await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
+
+        async def test_3(self) -> None:
+            await self.ch.close()
+            with self.assertRaises(ChanClosed):
+                await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+            with self.assertRaises(ChanClosed):
+                await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+
+    class SendableNotif(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            await self.ch.send(1)
+            with self.assertRaises(TimeoutError):
+                await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+
+        async def test_2(self) -> None:
+            await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+
+    class RecvableNotif(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            with self.assertRaises(TimeoutError):
+                await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+
+        async def test_2(self) -> None:
+            await self.ch.send(1)
+            await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+
 
 BASE_CASES = tuple(extract_testcases(BaseCases))

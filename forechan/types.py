@@ -38,10 +38,6 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
-    def __neg__(self) -> Awaitable[T]:
-        ...
-
-    @abstractmethod
     async def close(self) -> None:
         ...
 

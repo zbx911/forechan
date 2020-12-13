@@ -25,6 +25,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
         self._sc, self._rc = Condition(), Condition()
         self._nc, self._ns, self._nr = Event(), Event(), Event()
+        self._ns.set()
 
     @property
     def maxlen(self) -> int:
@@ -50,9 +51,6 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     def __lshift__(self, item: T) -> Awaitable[None]:
         return self.send(item)
-
-    def __neg__(self) -> Awaitable[T]:
-        return self.recv()
 
     async def close(self) -> None:
         async def c1() -> None:
