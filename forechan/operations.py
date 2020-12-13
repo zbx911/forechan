@@ -4,12 +4,11 @@ from typing import (
     Any,
     AsyncIterator,
     Callable,
-    MutableSequence,
     Sequence,
+    Set,
     Tuple,
     TypeVar,
     Union,
-    Set,
     overload,
 )
 
@@ -85,13 +84,19 @@ async def trans(
 ) -> Chan[U]:
     out: Chan[U] = chan()
 
+    async def close() -> None:
+        await out._closed_notif()
+        await _close(ch, close=cascade_close)
+
+    create_task(close())
+
     async def cont() -> None:
         async with out:
             async for item in trans(ch):
                 try:
                     await out.send(item)
                 except ChanClosed:
-                    await _close(ch, close=cascade_close)
+                    break
 
     create_task(cont())
     return out
@@ -101,20 +106,26 @@ async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan
     channels: Sequence[Chan[Any]] = tuple((ch, *chs))
     out: Chan[T] = chan()
 
+    async def close() -> None:
+        await out._closed_notif()
+        await _close(ch, *chs, close=cascade_close)
+
+    create_task(close())
+
     async def cont() -> None:
         async with out:
             async for _, item in await select(*channels):
                 try:
                     await out.send(item)
                 except ChanClosed:
-                    await _close(ch, *chs, close=cascade_close)
+                    break
 
     create_task(cont())
     return out
 
 
 async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[Chan[T]]:
-    if n < 2:
+    if n < 1:
         raise ValueError()
 
     channels: Set[Chan[T]] = {*islice(iter(chan, None), n)}
@@ -144,8 +155,7 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
                 except ChanClosed:
                     raise
 
-            if channels:
-                await gather(*map(send, channels))
+            await gather(*map(send, channels))
 
     create_task(co())
     return tuple(channels)
