@@ -12,12 +12,6 @@ class OutdatedError(Exception):
     pass
 
 
-def mk_pair(
-    t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
-) -> Tuple[Chan[T], Chan[U]]:
-    return chan(t), chan(u)
-
-
 def mk_req(
     ask: Chan[Tuple[int, T]], reply: Chan[Tuple[int, U]]
 ) -> Callable[[T], Awaitable[U]]:
@@ -40,3 +34,11 @@ def mk_req(
                 return ans
 
     return cont
+
+
+def mk_req_pair(
+    t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
+) -> Tuple[Chan[T], Chan[U], Callable[[T], Awaitable[U]]]:
+    ask, reply = chan(t), chan(u)
+    req = mk_req(ask, reply=reply)
+    return ask, reply, req

@@ -14,7 +14,7 @@ from typing import (
     cast,
 )
 
-from .types import Chan, ChanClosed
+from .types import Chan, ChanClosed, ChanEmpty
 
 T = TypeVar("T")
 
@@ -51,6 +51,14 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     def __lshift__(self, item: T) -> Awaitable[None]:
         return self.send(item)
+
+    def peek(self) -> T:
+        if not self:
+            raise ChanClosed()
+        elif not len(self):
+            raise ChanEmpty()
+        else:
+            return next(iter(self._q))
 
     async def close(self) -> None:
         async def c1() -> None:

@@ -42,7 +42,10 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
                 except ChanClosed:
                     raise
 
-            await gather(*map(send, channels))
+            if channels:
+                await gather(*map(send, channels))
+            else:
+                break
 
     create_task(cont())
     return ret

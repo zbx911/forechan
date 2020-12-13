@@ -18,6 +18,12 @@ T = TypeVar("T")
 class ChanClosed(Exception):
     pass
 
+class ChanEmpty(Exception):
+    pass
+
+class ChanFull(Exception):
+    pass
+
 
 @runtime_checkable
 class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
@@ -35,6 +41,10 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
 
     @abstractmethod
     def __lshift__(self, item: T) -> Awaitable[None]:
+        ...
+
+    @abstractmethod
+    def peek(self) -> T:
         ...
 
     @abstractmethod
