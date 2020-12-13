@@ -5,8 +5,6 @@ from typing import (
     Any,
     AsyncContextManager,
     AsyncIterable,
-    Awaitable,
-    Callable,
     Protocol,
     Sized,
     TypeVar,
@@ -16,16 +14,12 @@ from typing import (
 T = TypeVar("T")
 
 
-class ChannelClosed(Exception):
+class ChanClosed(Exception):
     pass
 
 
-Notifier = Callable[[], Awaitable[None]]
-Unsub = Callable[[], None]
-
-
 @runtime_checkable
-class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
+class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractproperty
     def maxlen(self) -> int:
         ...
@@ -35,15 +29,15 @@ class Channel(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
-    async def __anext__(self) -> T:
-        ...
-
-    @abstractmethod
-    async def __aenter__(self) -> Channel[T]:
+    async def __aenter__(self) -> Chan[T]:
         ...
 
     @abstractmethod
     async def __aexit__(self, *_: Any) -> None:
+        ...
+
+    @abstractmethod
+    async def __anext__(self) -> T:
         ...
 
     @abstractmethod

@@ -1,6 +1,7 @@
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.chan import mk_chan
+from ...forechan.chan import chan
+from ...forechan.types import Chan
 from ..da import extract_testcases, mk_loader, polyclass_matrix
 from ._base import BASE_CASES, HasChannel
 
@@ -8,7 +9,7 @@ from ._base import BASE_CASES, HasChannel
 class ChanBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChannel):
         def setUp(self) -> None:
-            self.ch = mk_chan(int)
+            self.ch: Chan[int] = chan()
 
 
 TEST_MATRIX = polyclass_matrix(extract_testcases(ChanBaseSetup), BASE_CASES)

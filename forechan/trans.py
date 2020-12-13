@@ -1,6 +1,7 @@
 from typing import AsyncIterator, Callable, Deque, Generic, TypeVar
 
-from .types import Channel, ChannelClosed
+from .chan import chan
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -8,6 +9,8 @@ U = TypeVar("U")
 
 def trans(
     trans: Callable[[AsyncIterator[T]], AsyncIterator[U]],
-    chan: Channel[T],
-) -> Channel[U]:
-    pass
+    ch: Chan[T],
+) -> Chan[U]:
+    out: Chan[U] = chan()
+
+    return out

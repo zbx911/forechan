@@ -1,14 +1,14 @@
 from asyncio.locks import Condition
 from asyncio.tasks import gather
 from collections import deque
-from typing import Any, AsyncIterator, Deque, Type, TypeVar, cast
+from typing import Any, AsyncIterator, Deque, TypeVar, cast
 
-from .types import Channel, ChannelClosed
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 
 
-class _Chan(Channel[T], AsyncIterator[T]):
+class _Chan(Chan[T], AsyncIterator[T]):
     def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
@@ -26,7 +26,7 @@ class _Chan(Channel[T], AsyncIterator[T]):
     def __len__(self) -> int:
         return len(self._q)
 
-    async def __aenter__(self) -> Channel[T]:
+    async def __aenter__(self) -> Chan[T]:
         return self
 
     async def __aexit__(self, *_: Any) -> None:
@@ -38,7 +38,7 @@ class _Chan(Channel[T], AsyncIterator[T]):
     async def __anext__(self) -> T:
         try:
             return await self.recv()
-        except ChannelClosed:
+        except ChanClosed:
             raise StopAsyncIteration()
 
     async def close(self) -> None:
@@ -57,7 +57,7 @@ class _Chan(Channel[T], AsyncIterator[T]):
     async def send(self, item: T) -> None:
         async with self._sc:
             if not self:
-                raise ChannelClosed()
+                raise ChanClosed()
             elif len(self) < self.maxlen:
                 async with self._rc:
                     self._rc.notify()
@@ -66,7 +66,7 @@ class _Chan(Channel[T], AsyncIterator[T]):
                 await self._sc.wait()
                 async with self._rc:
                     if not self:
-                        raise ChannelClosed()
+                        raise ChanClosed()
                     else:
                         self._rc.notify()
                         self._q.append(item)
@@ -74,7 +74,7 @@ class _Chan(Channel[T], AsyncIterator[T]):
     async def recv(self) -> T:
         async with self._rc:
             if not self:
-                raise ChannelClosed()
+                raise ChanClosed()
             elif len(self):
                 async with self._sc:
                     self._sc.notify()
@@ -83,11 +83,11 @@ class _Chan(Channel[T], AsyncIterator[T]):
                 await self._rc.wait()
                 async with self._sc:
                     if not self:
-                        raise ChannelClosed()
+                        raise ChanClosed()
                     else:
                         self._sc.notify()
                         return self._q.popleft()
 
 
-def mk_chan(t: Type[T], maxlen: int = 1) -> Channel[T]:
+def chan(maxlen: int = 1) -> Chan[T]:
     return _Chan[T](maxlen=maxlen)

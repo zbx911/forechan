@@ -5,11 +5,11 @@ from collections import deque
 from itertools import chain
 from typing import Awaitable, Deque, Set, Sized, Tuple, TypeVar, cast
 
-from .types import Channel
+from .types import Chan
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
-def join(chan: Channel[T], *chans: Channel[T]) -> Channel[T]:
+def join(chan: Chan[T], *chans: Chan[T]) -> Chan[T]:
     pass

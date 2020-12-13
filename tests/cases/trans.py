@@ -5,8 +5,9 @@ from random import shuffle
 from typing import Any, AsyncIterator, Awaitable, MutableSequence
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.chan import mk_chan
+from ...forechan.chan import chan
 from ...forechan.trans import trans
+from ...forechan.types import Chan
 from ..consts import MODICUM_TIME, REPEAT_FACTOR
 from ..da import extract_testcases, mk_loader, polyclass_matrix
 from ._base import BASE_CASES, HasChannel
@@ -20,8 +21,8 @@ async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
 class TransBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChannel):
         def setUp(self) -> None:
-            self.p = mk_chan(int)
-            self.ch = trans(xform, chan=self.p)
+            self.p: Chan[int] = chan()
+            self.ch = trans(xform, ch=self.p)
 
 
 class UpstreamSend(TransBaseSetup.SetupChan):

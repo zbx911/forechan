@@ -4,13 +4,13 @@ from random import shuffle
 from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.types import Channel, ChannelClosed
+from ...forechan.types import Chan, ChanClosed
 from ..consts import REPEAT_FACTOR, SMOL_TIME, MODICUM_TIME
 from ..da import extract_testcases
 
 
 class HasChannel(Protocol):
-    ch: Channel[int]
+    ch: Chan[int]
 
 
 class BaseCases:
@@ -26,22 +26,22 @@ class BaseCases:
             await self.ch.send(1)
 
             async def c1() -> None:
-                with self.assertRaises(ChannelClosed):
+                with self.assertRaises(ChanClosed):
                     await self.ch.send(1)
 
             async def c2() -> None:
-                with self.assertRaises(ChannelClosed):
+                with self.assertRaises(ChanClosed):
                     await self.ch.send(1)
 
             await gather(c1(), c2(), self.ch.close())
 
         async def test_4(self) -> None:
             async def c1() -> None:
-                with self.assertRaises(ChannelClosed):
+                with self.assertRaises(ChanClosed):
                     await self.ch.recv()
 
             async def c2() -> None:
-                with self.assertRaises(ChannelClosed):
+                with self.assertRaises(ChanClosed):
                     await self.ch.recv()
 
             await gather(c1(), c2(), self.ch.close())
@@ -60,13 +60,13 @@ class BaseCases:
     class SendToClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             await self.ch.close()
-            with self.assertRaises(ChannelClosed):
+            with self.assertRaises(ChanClosed):
                 await self.ch.send(1)
 
     class RecvFromClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             await self.ch.close()
-            with self.assertRaises(ChannelClosed):
+            with self.assertRaises(ChanClosed):
                 await self.ch.recv()
 
     class DoubleSend(IsolatedAsyncioTestCase, HasChannel):

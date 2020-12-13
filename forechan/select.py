@@ -1,13 +1,7 @@
-from asyncio import gather
-from collections import deque
-from typing import Any, Deque, Sequence, Tuple, TypeVar, cast
+from typing import Any, AsyncIterator, Tuple
 
-from .types import Channel, ChannelClosed
-
-T = TypeVar("T")
+from .types import Chan, ChanClosed
 
 
-def select(
-    chan: Channel[Any], *chans: Channel[Any]
-) -> Channel[Tuple[Channel[Any], Any]]:
+async def select(chan: Chan[Any], *chans: Chan[Any]) -> AsyncIterator[Tuple[Chan, Any]]:
     pass
