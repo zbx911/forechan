@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, abstractproperty
 from typing import (
+    Any,
     AsyncContextManager,
     AsyncIterable,
     ContextManager,
@@ -42,6 +43,10 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
 
     @abstractmethod
     async def __lshift__(self, item: T) -> None:
+        ...
+
+    @abstractmethod
+    async def __rlshift__(self, _: Any) -> T:
         ...
 
     @abstractmethod

@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from typing import (
     Any,
     AsyncIterator,
-    Awaitable,
     Deque,
     Iterator,
     Optional,
@@ -51,6 +50,9 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     async def __lshift__(self, item: T) -> None:
         await self.send(item)
+
+    async def __rlshift__(self, _: Any) -> T:
+        return await self.recv()
 
     def empty(self) -> bool:
         return not len(self)
