@@ -4,7 +4,6 @@ from abc import abstractmethod, abstractproperty
 from typing import (
     AsyncContextManager,
     AsyncIterable,
-    Awaitable,
     ContextManager,
     Protocol,
     Sized,
@@ -42,7 +41,7 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
-    def __lshift__(self, item: T) -> Awaitable[None]:
+    async def __lshift__(self, item: T) -> None:
         ...
 
     @abstractmethod

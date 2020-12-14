@@ -49,8 +49,8 @@ class _Chan(Chan[T], AsyncIterator[T]):
         except ChanClosed:
             raise StopAsyncIteration()
 
-    def __lshift__(self, item: T) -> Awaitable[None]:
-        return self.send(item)
+    async def __lshift__(self, item: T) -> None:
+        await self.send(item)
 
     def empty(self) -> bool:
         return not len(self)
