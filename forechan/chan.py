@@ -1,17 +1,8 @@
-from asyncio.locks import Condition, Event
+from asyncio.locks import Event, Lock
 from asyncio.tasks import gather
 from collections import deque
 from contextlib import contextmanager
-from typing import (
-    Any,
-    AsyncIterator,
-    Deque,
-    Iterator,
-    Optional,
-    Type,
-    TypeVar,
-    cast,
-)
+from typing import Any, AsyncIterator, Deque, Iterator, Optional, Type, TypeVar, cast
 
 from .types import Chan, ChanClosed
 
@@ -22,9 +13,10 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
-        self._sc, self._rc = Condition(), Condition()
-        self._nc, self._ns, self._nr = Event(), Event(), Event()
-        self._ns.set()
+        self._sendlock, self._recvlock = Lock(), Lock()
+        self._sendable, self._recvable = Event(), Event()
+        self._onclose = Event()
+        self._sendable.set()
 
     @property
     def maxlen(self) -> int:
@@ -34,7 +26,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
         return f"chan[{', '.join(str(item) for item in self._q)}]"
 
     def __bool__(self) -> bool:
-        return not self._nc.is_set()
+        return not self._onclose.is_set()
 
     def __len__(self) -> int:
         return len(self._q)
@@ -58,90 +50,70 @@ class _Chan(Chan[T], AsyncIterator[T]):
         return await self.recv()
 
     def empty(self) -> bool:
-        return not len(self)
+        if not self:
+            raise ChanClosed()
+        else:
+            return not len(self)
 
     def full(self) -> bool:
-        return len(self) >= self.maxlen
+        if not self:
+            raise ChanClosed()
+        else:
+            return len(self) >= self.maxlen
 
     async def close(self) -> None:
-        async def c1() -> None:
-            async with self._sc:
-                self._ns.set()
-                self._sc.notify_all()
-
-        async def c2() -> None:
-            async with self._rc:
-                self._nr.set()
-                self._rc.notify_all()
-
-        self._nc.set()
         self._q.clear()
-        await gather(c1(), c2())
+        self._onclose.set()
+        self._sendable.set()
+        self._recvable.set()
 
     @contextmanager
-    def _sent_handler(self) -> Iterator[None]:
+    def _state_handler(self) -> Iterator[None]:
         try:
             yield None
         finally:
-            self._nr.set()
-            if self.full():
-                self._ns.clear()
-
-    @contextmanager
-    def _recv_handler(self) -> Iterator[None]:
-        try:
-            yield None
-        finally:
-            self._ns.set()
             if self.empty():
-                self._nr.clear()
+                self._recvable.clear()
+            else:
+                self._recvable.set()
+
+            if self.full():
+                self._sendable.clear()
+            else:
+                self._sendable.set()
 
     async def send(self, item: T) -> None:
-        with self._sent_handler():
-            async with self._sc:
+        with self._state_handler():
+            while self.full():
+                await self._sendable.wait()
+
+            async with self._sendlock:
                 if not self:
                     raise ChanClosed()
-                elif not self.full():
-                    async with self._rc:
-                        self._rc.notify()
-                        self._q.append(item)
                 else:
-                    await self._sc.wait()
-                    async with self._rc:
-                        if not self:
-                            raise ChanClosed()
-                        else:
-                            self._rc.notify()
-                            self._q.append(item)
+                    self._q.append(item)
 
     async def recv(self) -> T:
-        with self._recv_handler():
-            async with self._rc:
+        with self._state_handler():
+            while self.empty():
+                await self._recvable.wait()
+
+            async with self._recvlock:
                 if not self:
                     raise ChanClosed()
-                elif not self.empty():
-                    async with self._sc:
-                        self._sc.notify()
-                        return self._q.popleft()
                 else:
-                    await self._rc.wait()
-                    async with self._sc:
-                        if not self:
-                            raise ChanClosed()
-                        else:
-                            self._sc.notify()
-                            return self._q.popleft()
+                    return self._q.popleft()
 
     async def _closed_notif(self) -> None:
-        await self._nc.wait()
+        await self._onclose.wait()
 
     async def _sendable_notif(self) -> None:
-        await self._ns.wait()
+        await self._sendable.wait()
         if not self:
             raise ChanClosed()
 
     async def _recvable_notif(self) -> None:
-        await self._nr.wait()
+        await self._recvable.wait()
         if not self:
             raise ChanClosed()
 
