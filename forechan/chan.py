@@ -14,7 +14,7 @@ from typing import (
     cast,
 )
 
-from .types import Chan, ChanClosed, ChanEmpty, ChanFull
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 
@@ -57,14 +57,6 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     def full(self) -> bool:
         return len(self) >= self.maxlen
-
-    def try_peek(self) -> T:
-        if not self:
-            raise ChanClosed()
-        elif self.empty():
-            raise ChanEmpty()
-        else:
-            return next(iter(self._q))
 
     async def close(self) -> None:
         async def c1() -> None:

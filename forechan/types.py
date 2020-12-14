@@ -58,10 +58,6 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
-    def try_peek(self) -> T:
-        ...
-
-    @abstractmethod
     async def send(self, item: T) -> None:
         ...
 
