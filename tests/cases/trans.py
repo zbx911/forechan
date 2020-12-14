@@ -1,13 +1,12 @@
 from asyncio import gather, wait_for
 from asyncio.tasks import gather
-from itertools import repeat
+from itertools import islice
 from random import shuffle
 from typing import Any, AsyncIterator, Awaitable, MutableSequence
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
 from ...forechan.trans import trans
-from ...forechan.types import Chan
 from ..consts import MODICUM_TIME, REPEAT_FACTOR
 from ..da import extract_testcases, mk_loader, polyclass_matrix
 from ._base import BASE_CASES, HasChannel
@@ -27,21 +26,21 @@ class TransBaseSetup:
 
 class UpstreamSend(TransBaseSetup.SetupChan):
     async def test_1(self) -> None:
-        await self.p.send(1)
-        await self.ch.recv()
-        await self.p.send(1)
-        await self.ch.recv()
-        await self.p.send(1)
+        await (self.p << 1)
+        await ([] << self.ch)
+        await (self.p << 1)
+        await ([] << self.ch)
+        await (self.p << 1)
 
     async def test_2(self) -> None:
         fut = gather(self.ch.recv(), self.ch.recv())
-        await self.p.send(1)
-        await self.p.send(1)
+        await (self.p << 1)
+        await (self.p << 1)
         await fut
 
     async def test_3(self) -> None:
-        sends = repeat(self.p.send(1), REPEAT_FACTOR)
-        recvs = repeat(self.ch.recv(), REPEAT_FACTOR)
+        sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
+        recvs = islice(iter(lambda: [] << self.ch, None), REPEAT_FACTOR)
         cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
         shuffle(cos)
         await wait_for(gather(*cos), timeout=MODICUM_TIME)

@@ -30,6 +30,9 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def maxlen(self) -> int:
         return cast(int, self._q.maxlen)
 
+    def __str__(self) -> str:
+        return f"chan[{', '.join(str(item) for item in self._q)}]"
+
     def __bool__(self) -> bool:
         return not self._nc.is_set()
 
