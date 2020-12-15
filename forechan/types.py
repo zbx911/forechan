@@ -6,6 +6,7 @@ from typing import (
     AsyncContextManager,
     AsyncIterable,
     ContextManager,
+    Iterable,
     Protocol,
     Sized,
     TypeVar,
@@ -103,6 +104,28 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
     @abstractmethod
     async def _on_recvable(self) -> None:
+        ...
+
+
+@runtime_checkable
+class Queue(Sized, Iterable[T], Protocol[T]):
+    def __init__(self, maxlen: int) -> None:
+        ...
+
+    @abstractproperty
+    def maxlen(self) -> int:
+        ...
+
+    @abstractmethod
+    def close(self) -> None:
+        ...
+
+    @abstractmethod
+    def send(self, item: T) -> None:
+        ...
+
+    @abstractmethod
+    def recv(self) -> T:
         ...
 
 

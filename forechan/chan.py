@@ -17,22 +17,22 @@ from typing import (
     cast,
 )
 
-from .types import Chan, ChanClosed, ChanEmpty, ChanFull
+from .types import Chan, ChanClosed, ChanEmpty, ChanFull, Queue
 
 T = TypeVar("T")
 
 
 class _Chan(Chan[T], AsyncIterator[T]):
-    def __init__(self, maxlen: int) -> None:
+    def __init__(self, q: Queue[T]) -> None:
         super().__init__()
-        self._q: Deque[T] = deque(maxlen=max(1, maxlen))
+        self._q = q
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
         self._sendable.set()
 
     @property
     def maxlen(self) -> int:
-        return cast(int, self._q.maxlen)
+        return self._q.maxlen
 
     def __str__(self) -> str:
         if self:
@@ -87,7 +87,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     async def close(self) -> None:
         await sleep(0)
-        self._q.clear()
+        self._q.close()
         self._onclose.set()
         self._sendable.set()
         self._recvable.set()
@@ -121,7 +121,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
             raise ChanFull()
         else:
             with self._state_handler():
-                self._q.append(item)
+                self._q.send(item)
 
     async def send(self, item: T) -> None:
         while True:
@@ -129,14 +129,14 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 await self._sendable.wait()
             else:
                 with self._state_handler():
-                    return self._q.append(item)
+                    return self._q.send(item)
 
     def try_recv(self) -> T:
         if self.empty():
             raise ChanEmpty()
         else:
             with self._state_handler():
-                return self._q.popleft()
+                return self._q.recv()
 
     async def recv(self) -> T:
         while True:
@@ -144,7 +144,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 await self._recvable.wait()
             else:
                 with self._state_handler():
-                    return self._q.popleft()
+                    return self._q.recv()
 
     async def _on_closed(self) -> None:
         await self._onclose.wait()
@@ -160,8 +160,33 @@ class _Chan(Chan[T], AsyncIterator[T]):
             raise ChanClosed()
 
 
-def chan(t: Optional[Type[T]] = None, maxlen: int = 1) -> Chan[T]:
-    return _Chan[T](maxlen=maxlen)
+class _NormalQueue(Queue[T]):
+    def __init__(self, maxlen: int) -> None:
+        self._q: Deque[T] = deque(maxlen=max(1, maxlen))
+
+    def __len__(self) -> int:
+        return len(self._q)
+
+    def __iter__(self) -> Iterator[T]:
+        return iter(self._q)
+
+    @property
+    def maxlen(self) -> int:
+        return cast(int, self._q.maxlen)
+
+    def close(self) -> None:
+        self._q.clear()
+
+    def send(self, item: T) -> None:
+        self._q.append(item)
+
+    def recv(self) -> T:
+        return self._q.popleft()
+
+
+def chan(t: Optional[Type[T]] = None) -> Chan[T]:
+    q = _NormalQueue[T](maxlen=1)
+    return _Chan[T](q=q)
 
 
 async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
