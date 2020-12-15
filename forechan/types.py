@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 from typing import (
     Any,
     AsyncContextManager,
@@ -30,7 +30,8 @@ class ChanFull(Exception):
 
 @runtime_checkable
 class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
-    @abstractproperty
+    @property
+    @abstractmethod
     def maxlen(self) -> int:
         ...
 
@@ -109,7 +110,8 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
 @runtime_checkable
 class Buf(Sized, Iterable[T], Protocol[T]):
-    @abstractproperty
+    @property
+    @abstractmethod
     def maxlen(self) -> int:
         ...
 
