@@ -10,7 +10,7 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
-async def mk_req_from(
+async def mb_from(
     ask: Chan[Tuple[int, T]], reply: Chan[Tuple[int, U]]
 ) -> Callable[[T], Awaitable[U]]:
     cond = Condition()
@@ -35,10 +35,10 @@ async def mk_req_from(
     return req
 
 
-async def mk_req(
+async def mk_mb(
     t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
 ) -> Tuple[Chan[Tuple[int, T]], Chan[Tuple[int, U]], Callable[[T], Awaitable[U]]]:
     ask: Chan[Tuple[int, T]] = chan()
     reply: Chan[Tuple[int, U]] = chan()
-    req = await mk_req_from(ask, reply=reply)
+    req = await mb_from(ask, reply=reply)
     return ask, reply, req
