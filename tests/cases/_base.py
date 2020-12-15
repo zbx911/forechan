@@ -50,18 +50,18 @@ class BaseCases:
 
     class SendRecvSync(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
-            self.ch < 1
-            iden = () < self.ch
+            (self.ch < 1)
+            iden = [] < self.ch
             self.assertEqual(iden, 1)
 
         async def test_2(self) -> None:
-            self.ch < 1
+            (self.ch < 1)
             with self.assertRaises(ChanFull):
-                self.ch < 1
+                (self.ch < 1)
 
         async def test_3(self) -> None:
             with self.assertRaises(ChanEmpty):
-                () < self.ch
+                ([] < self.ch)
 
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:

@@ -2,7 +2,9 @@
 
 Go style `asyncio` channels with convinence methods & syntax.
 
-Fully Typed with Generics, `mypy` ready.
+**Fully Typed with Generics**, `mypy` ready.
+
+Inspired by [`core.async`](https://github.com/clojure/core.async) from [clojure](https://github.com/clojure/clojure).
 
 ## Example
 
@@ -62,8 +64,8 @@ def producer() -> Chan[int]:
 
 ```python
 head = ch.try_peek() # Throws `ChanEmpty`
-ch < 2               # or use `ch.try_send(2)` throws `ChanFull`
-two = [] < ch        # or use `ch.try_recv()`  throws `ChanEmpty`
+(ch < 2)             # or use `ch.try_send(2)` throws `ChanFull`
+two = ([] < ch)      # or use `ch.try_recv()`  throws `ChanEmpty`
 assert two == 2
 ```
 
