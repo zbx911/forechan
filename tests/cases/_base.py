@@ -14,6 +14,10 @@ class HasChannel(Protocol):
 
 
 class BaseCases:
+    class TypeConformance(IsolatedAsyncioTestCase, HasChannel):
+        async def test_1(self) -> None:
+            self.assertIsInstance(self.ch, Chan)
+
     class Close(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             self.assertTrue(self.ch)
