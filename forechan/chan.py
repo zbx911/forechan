@@ -1,5 +1,5 @@
 from asyncio import sleep
-from asyncio.locks import Event, Lock
+from asyncio.locks import Event
 from collections import deque
 from contextlib import contextmanager
 from typing import Any, AsyncIterator, Deque, Iterator, Optional, Type, TypeVar, cast
@@ -13,7 +13,6 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __init__(self, maxlen: int) -> None:
         super().__init__()
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
-        self._lock = Lock()
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
         self._sendable.set()

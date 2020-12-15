@@ -56,4 +56,16 @@ def producer() -> Chan[int]:
 # up to you
 ```
 
+### Synchronous
+
+```python
+head = ch.try_peek() # Throws `ChanEmpty`
+ch < 2               # Throws `ChanFull`
+two = [] < ch        # Throws `ChanEmpty`
+assert two == 2
+
+# or use `ch.try_send(2)` and `ch.try_recv()`
+# up to you
+```
+
 ## Doc
