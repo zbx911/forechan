@@ -129,7 +129,7 @@ if `cascade_close = True`, which is the default. Closing the returned channel(s)
 ### Fan In
 
 ```python
-cs: Sequence[Chan[T]] = produce_bunch_of_chans()
+cs: Iterable[Chan[T]] = produce_bunch_of_chans()
 
 # `ch` take items from each channel in `cs` until they are all closed
 #  after which `ch` will also close

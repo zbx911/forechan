@@ -1,3 +1,4 @@
+from asyncio import gather
 from asyncio.tasks import create_task
 from typing import Awaitable, Callable, Tuple, TypeVar
 
@@ -18,7 +19,11 @@ async def split(
 
     if cascade_close:
         await cascading_close((lhs, rhs), dest=(ch,))
-    await cascading_close((ch,), dest=(lhs, rhs))
+    await gather(
+        cascading_close((ch,), dest=(lhs, rhs)),
+        cascading_close((lhs,), dest=(rhs,)),
+        cascading_close((rhs,), dest=(lhs,)),
+    )
 
     async def cont() -> None:
         async for item in ch:
