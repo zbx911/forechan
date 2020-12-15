@@ -24,18 +24,20 @@ assert two == 2
 async for ch, item in select(ch1, ch2):
   if ch == ch1:
     # when receiving from `ch1`
-    # do something with item
+    # do something with `item`
   elif ch == ch2:
     # when receiving from `ch2`
-    # do something with item
+    # do something with `item`
 ```
 
 ### Consumer
 
 ```python
-async for item in ch: # `Chan[T]` is AsyncIterator
-  # do something with item
-  # until `ch` is closed
+async def consumer() -> None:
+  async for item in ch: # `Chan[T]` is also AsyncIterator
+    pass
+    # do something with `item`, until `ch` is closed
+    # or call `await ch.close()` to shutdown producer
 ```
 
 ### Producer
@@ -45,7 +47,7 @@ def producer() -> Chan[int]:
   ch = chan(int)
 
   async def cont() -> None:
-    async with ch: # auto close `ch` when done
+    async with ch: # `Chan[T]` is AsyncContextManager, auto close `ch` when done
       for i in range(100):
         await (ch << i)
 
@@ -60,12 +62,9 @@ def producer() -> Chan[int]:
 
 ```python
 head = ch.try_peek() # Throws `ChanEmpty`
-ch < 2               # Throws `ChanFull`
-two = [] < ch        # Throws `ChanEmpty`
+ch < 2               # or use `ch.try_send(2)` throws `ChanFull`
+two = [] < ch        # or use `ch.try_recv()`  throws `ChanEmpty`
 assert two == 2
-
-# or use `ch.try_send(2)` and `ch.try_recv()`
-# up to you
 ```
 
 ## Doc
