@@ -159,8 +159,8 @@ class _Chan(Chan[T], AsyncIterator[T]):
             raise ChanClosed()
 
 
-def chan(t: Optional[Type[T]] = None, buffer: Optional[Buffer[T]] = None) -> Chan[T]:
-    b = buffer or NormalBuf[T](maxlen=1)
+def chan(t: Optional[Type[T]] = None, buf: Optional[Buffer[T]] = None) -> Chan[T]:
+    b = buf or NormalBuf[T](maxlen=1)
     return _Chan[T](b=b)
 
 

@@ -28,3 +28,16 @@ class NormalBuf(Buffer[T]):
 
     def recv(self) -> T:
         return self._q.popleft()
+
+
+class SlidingBuf(NormalBuf[T]):
+    def send(self, item: T) -> None:
+        if len(self) < self.maxlen:
+            self._q.append(item)
+
+
+class DroppingBuf(NormalBuf[T]):
+    def send(self, item: T) -> None:
+        if len(self) >= self.maxlen:
+            self._q.popleft()
+            self._q.append(item)
