@@ -3,7 +3,7 @@ from itertools import count
 from typing import Tuple
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.mq import mk_req
+from ...forechan.mb import mb
 from ...forechan.types import Chan
 
 
@@ -19,13 +19,13 @@ async def echo(
             break
 
 
-class RPCBaseSetup:
+class MailBoxBaseSetup:
     class SetupChan(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
-            self.ask, self.reply, self.req = await mk_req(int, int)
+            self.ask, self.reply, self.req = await mb(int, int)
 
 
-class RPCAskReply(RPCBaseSetup.SetupChan):
+class MailBoxAskReply(MailBoxBaseSetup.SetupChan):
     async def test_1(self) -> None:
         create_task(echo(self.ask, reply=self.reply, cycles=1))
         ans = await self.req(1)

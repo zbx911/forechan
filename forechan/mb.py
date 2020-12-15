@@ -35,7 +35,7 @@ async def mb_from(
     return req
 
 
-async def mk_mb(
+async def mb(
     t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
 ) -> Tuple[Chan[Tuple[int, T]], Chan[Tuple[int, U]], Callable[[T], Awaitable[U]]]:
     ask: Chan[Tuple[int, T]] = chan()

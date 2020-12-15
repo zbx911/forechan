@@ -3,7 +3,7 @@ from .chan import chan
 from .distribute import distribute
 from .fan_in import fan_in
 from .fan_out import fan_out
-from .mb import mk_mb, mb_from
+from .mb import mb, mb_from
 from .ops import cascading_close
 from .pipe import pipe
 from .pubsub import sub
