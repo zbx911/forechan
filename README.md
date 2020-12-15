@@ -33,6 +33,20 @@ async for ch, item in await select(ch1, ch2):
     # do something with `item`
 ```
 
+### Wait Group
+
+```python
+wg = wait_group()
+
+for _ in range(5):
+  async def cont() -> None:
+    with wg:
+      # do some work
+
+# will wait for all work to be completed
+await wg.wait()
+```
+
 ### Synchronous
 
 ```python
@@ -105,20 +119,6 @@ def producer() -> Chan[int]:
 
 # or call `await ch.close()` any time
 # up to you
-```
-
-### Wait Group
-
-```python
-wg = wait_group()
-
-for _ in range(5):
-  async def cont() -> None:
-    with wg:
-      # do some work
-
-# will wait for all work to be completed
-await wg.wait()
 ```
 
 ## Common Patterns
