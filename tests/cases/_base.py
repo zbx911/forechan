@@ -97,16 +97,18 @@ class BaseCases:
             await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
+            nums = 10
+
             async def c1() -> None:
                 with self.ch:
-                    for i in range(REPEAT_FACTOR + 1):
+                    for i in range(nums + 1):
                         await (self.ch << i)
 
             async def c2() -> None:
                 i = -1
                 async for i in self.ch:
                     pass
-                self.assertEqual(i, REPEAT_FACTOR)
+                self.assertEqual(i, nums)
 
             await wait_for(gather(c1(), c2()), timeout=MODICUM_TIME)
 
