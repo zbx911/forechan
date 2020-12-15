@@ -9,7 +9,7 @@ from ...forechan.chan import chan
 from ...forechan.trans import trans
 from ..consts import MODICUM_TIME, REPEAT_FACTOR
 from ..da import extract_testcases, mk_loader, polyclass_matrix
-from ._base import BASE_CASES, HasChannel
+from ._base import BASE_CASES, HasChan
 
 
 async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
@@ -18,7 +18,7 @@ async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
 
 
 class TransBaseSetup:
-    class SetupChan(IsolatedAsyncioTestCase, HasChannel):
+    class SetupChan(IsolatedAsyncioTestCase, HasChan):
         async def asyncSetUp(self) -> None:
             self.p = chan(int)
             self.ch = await trans(xform, ch=self.p)

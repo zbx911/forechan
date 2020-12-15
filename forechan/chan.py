@@ -4,13 +4,13 @@ from contextlib import contextmanager
 from typing import Any, AsyncIterator, Iterator, Optional, Type, TypeVar
 
 from .buffers import NormalBuf
-from .types import Buffer, Chan, ChanClosed, ChanEmpty, ChanFull
+from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
 
 T = TypeVar("T")
 
 
 class _Chan(Chan[T], AsyncIterator[T]):
-    def __init__(self, b: Buffer[T]) -> None:
+    def __init__(self, b: Buf[T]) -> None:
         self._b = b
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
@@ -146,6 +146,6 @@ class _Chan(Chan[T], AsyncIterator[T]):
             raise ChanClosed()
 
 
-def chan(t: Optional[Type[T]] = None, buf: Optional[Buffer[T]] = None) -> Chan[T]:
+def chan(t: Optional[Type[T]] = None, buf: Optional[Buf[T]] = None) -> Chan[T]:
     b = buf or NormalBuf[T](maxlen=1)
     return _Chan[T](b=b)

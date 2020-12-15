@@ -9,16 +9,16 @@ from ..consts import MODICUM_TIME, REPEAT_FACTOR, SMOL_TIME
 from ..da import extract_testcases
 
 
-class HasChannel(Protocol):
+class HasChan(Protocol):
     ch: Chan[int]
 
 
 class BaseCases:
-    class TypeConformance(IsolatedAsyncioTestCase, HasChannel):
+    class TypeConformance(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             self.assertIsInstance(self.ch, Chan)
 
-    class Close(IsolatedAsyncioTestCase, HasChannel):
+    class Close(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             self.assertTrue(self.ch)
 
@@ -52,7 +52,7 @@ class BaseCases:
             await self.ch.close()
             await gather(c1(), c2())
 
-    class SendRecvSync(IsolatedAsyncioTestCase, HasChannel):
+    class SendRecvSync(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             (self.ch < 1)
             iden = [] < self.ch
@@ -67,36 +67,36 @@ class BaseCases:
             with self.assertRaises(ChanEmpty):
                 ([] < self.ch)
 
-    class SendRecv(IsolatedAsyncioTestCase, HasChannel):
+    class SendRecv(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             await (self.ch << 1)
             iden = await ([] << self.ch)
             self.assertEqual(iden, 1)
 
-    class SendToClosed(IsolatedAsyncioTestCase, HasChannel):
+    class SendToClosed(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             await self.ch.close()
             with self.assertRaises(ChanClosed):
                 await (self.ch << 1)
 
-    class RecvFromClosed(IsolatedAsyncioTestCase, HasChannel):
+    class RecvFromClosed(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             await self.ch.close()
             with self.assertRaises(ChanClosed):
                 await ([] << self.ch)
 
-    class DoubleSend(IsolatedAsyncioTestCase, HasChannel):
+    class DoubleSend(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await (self.ch << 1)
                 await wait_for(self.ch << 1, timeout=SMOL_TIME)
 
-    class EmptyRecv(IsolatedAsyncioTestCase, HasChannel):
+    class EmptyRecv(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await wait_for([] << self.ch, timeout=SMOL_TIME)
 
-    class ManySendRecv(IsolatedAsyncioTestCase, HasChannel):
+    class ManySendRecv(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             await (self.ch << 1)
             await gather(self.ch << 1, [] << self.ch)
@@ -134,7 +134,7 @@ class BaseCases:
             await wait_for(gather(*cos), timeout=MODICUM_TIME)
             self.assertEqual(len(self.ch), 0)
 
-    class ClosedNotif(IsolatedAsyncioTestCase, HasChannel):
+    class ClosedNotif(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
@@ -150,7 +150,7 @@ class BaseCases:
             with self.assertRaises(ChanClosed):
                 await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
 
-    class SendableNotif(IsolatedAsyncioTestCase, HasChannel):
+    class SendableNotif(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             await (self.ch << 1)
             with self.assertRaises(TimeoutError):
@@ -159,7 +159,7 @@ class BaseCases:
         async def test_2(self) -> None:
             await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
 
-    class RecvableNotif(IsolatedAsyncioTestCase, HasChannel):
+    class RecvableNotif(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
                 await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)

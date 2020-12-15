@@ -1,12 +1,12 @@
 from collections import deque
 from typing import Deque, Iterator, TypeVar, cast
 
-from .types import Buffer
+from .types import Buf
 
 T = TypeVar("T")
 
 
-class NormalBuf(Buffer[T]):
+class NormalBuf(Buf[T]):
     def __init__(self, maxlen: int) -> None:
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
 

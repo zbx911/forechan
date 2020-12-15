@@ -108,7 +108,7 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
 
 @runtime_checkable
-class Buffer(Sized, Iterable[T], Protocol[T]):
+class Buf(Sized, Iterable[T], Protocol[T]):
     def __init__(self, maxlen: int) -> None:
         ...
 

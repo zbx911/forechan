@@ -2,11 +2,11 @@ from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
 from ..da import extract_testcases, mk_loader, polyclass_matrix
-from ._base import BASE_CASES, HasChannel
+from ._base import BASE_CASES, HasChan
 
 
 class ChanBaseSetup:
-    class SetupChan(IsolatedAsyncioTestCase, HasChannel):
+    class SetupChan(IsolatedAsyncioTestCase, HasChan):
         async def asyncSetUp(self) -> None:
             self.ch = chan(int)
 

@@ -10,5 +10,5 @@ from .pubsub import sub
 from .select import select
 from .split import split
 from .trans import trans
-from .types import Buffer, Chan, WaitGroup
+from .types import Buf, Chan, WaitGroup
 from .wait_group import wait_group
