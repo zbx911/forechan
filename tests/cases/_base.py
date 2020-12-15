@@ -19,7 +19,7 @@ class BaseCases:
             self.assertTrue(self.ch)
 
         async def test_2(self) -> None:
-            self.ch.close()
+            await self.ch.close()
             self.assertFalse(self.ch)
 
         async def test_3(self) -> None:
@@ -33,7 +33,7 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await (self.ch << 1)
 
-            self.ch.close()
+            await self.ch.close()
             await gather(c1(), c2())
 
         async def test_4(self) -> None:
@@ -45,7 +45,7 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await ([] << self.ch)
 
-            self.ch.close()
+            await self.ch.close()
             await gather(c1(), c2())
 
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
@@ -61,13 +61,13 @@ class BaseCases:
 
     class SendToClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
-            self.ch.close()
+            await self.ch.close()
             with self.assertRaises(ChanClosed):
                 await (self.ch << 1)
 
     class RecvFromClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
-            self.ch.close()
+            await self.ch.close()
             with self.assertRaises(ChanClosed):
                 await ([] << self.ch)
 
@@ -100,7 +100,7 @@ class BaseCases:
             nums = 10
 
             async def c1() -> None:
-                with self.ch:
+                async with self.ch:
                     for i in range(nums + 1):
                         await (self.ch << i)
 
@@ -126,11 +126,11 @@ class BaseCases:
                 await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
-            self.ch.close()
+            await self.ch.close()
             await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
-            self.ch.close()
+            await self.ch.close()
             with self.assertRaises(ChanClosed):
                 await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
             with self.assertRaises(ChanClosed):

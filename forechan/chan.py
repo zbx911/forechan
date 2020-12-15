@@ -1,3 +1,4 @@
+from asyncio import sleep
 from asyncio.locks import Event, Lock
 from collections import deque
 from contextlib import contextmanager
@@ -33,8 +34,8 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __len__(self) -> int:
         return len(self._q)
 
-    def __exit__(self, *_: Any) -> None:
-        self.close()
+    async def __aexit__(self, *_: Any) -> None:
+        await self.close()
 
     def __aiter__(self) -> AsyncIterator[T]:
         return self
@@ -69,7 +70,8 @@ class _Chan(Chan[T], AsyncIterator[T]):
         else:
             return len(self) >= self.maxlen
 
-    def close(self) -> None:
+    async def close(self) -> None:
+        await sleep(0)
         self._q.clear()
         self._onclose.set()
         self._sendable.set()

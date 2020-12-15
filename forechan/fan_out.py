@@ -2,8 +2,8 @@ from asyncio.tasks import create_task, gather
 from itertools import islice
 from typing import Sequence, Set, TypeVar
 
+from ._ops import close
 from .chan import chan
-from .operations import close
 from .types import Chan, ChanClosed
 from .wait_group import wait_group
 
@@ -29,7 +29,7 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
 
     async def close_upstream() -> None:
         await wg.wait()
-        close(ch, close=cascade_close)
+        await close(ch, close=cascade_close)
 
     create_task(close_upstream())
 
