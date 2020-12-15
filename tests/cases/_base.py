@@ -97,6 +97,20 @@ class BaseCases:
             await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
+            async def c1() -> None:
+                with self.ch:
+                    for i in range(REPEAT_FACTOR + 1):
+                        await (self.ch << i)
+
+            async def c2() -> None:
+                i = -1
+                async for i in self.ch:
+                    pass
+                self.assertEqual(i, REPEAT_FACTOR)
+
+            await wait_for(gather(c1(), c2()), timeout=MODICUM_TIME)
+
+        async def test_4(self) -> None:
             sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
             recvs = islice(iter(lambda: () << self.ch, None), REPEAT_FACTOR)
             cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
