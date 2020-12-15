@@ -1,13 +1,11 @@
 from asyncio import sleep
 from asyncio.locks import Event
 from asyncio.tasks import create_task
-from collections import deque
 from contextlib import contextmanager
 from typing import (
     Any,
     AsyncIterable,
     AsyncIterator,
-    Deque,
     Iterable,
     Iterator,
     Optional,
@@ -17,26 +15,27 @@ from typing import (
     cast,
 )
 
-from .types import Chan, ChanClosed, ChanEmpty, ChanFull, Queue
+from .buffers import NormalBuf
+from .types import Buffer, Chan, ChanClosed, ChanEmpty, ChanFull
 
 T = TypeVar("T")
 
 
 class _Chan(Chan[T], AsyncIterator[T]):
-    def __init__(self, q: Queue[T]) -> None:
+    def __init__(self, b: Buffer[T]) -> None:
         super().__init__()
-        self._q = q
+        self._b = b
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
         self._sendable.set()
 
     @property
     def maxlen(self) -> int:
-        return self._q.maxlen
+        return self._b.maxlen
 
     def __str__(self) -> str:
         if self:
-            return f"chan[{', '.join(str(item) for item in self._q)}]"
+            return f"chan[{', '.join(str(item) for item in self._b)}]"
         else:
             return "chan|<closed>|"
 
@@ -44,7 +43,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
         return not self._onclose.is_set()
 
     def __len__(self) -> int:
-        return len(self._q)
+        return len(self._b)
 
     async def __aenter__(self) -> Chan[T]:
         return self
@@ -87,7 +86,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
     async def close(self) -> None:
         await sleep(0)
-        self._q.close()
+        self._b.close()
         self._onclose.set()
         self._sendable.set()
         self._recvable.set()
@@ -114,14 +113,14 @@ class _Chan(Chan[T], AsyncIterator[T]):
         if self.empty():
             raise ChanEmpty()
         else:
-            return next(iter(self._q))
+            return next(iter(self._b))
 
     def try_send(self, item: T) -> None:
         if self.full():
             raise ChanFull()
         else:
             with self._state_handler():
-                self._q.send(item)
+                self._b.send(item)
 
     async def send(self, item: T) -> None:
         while True:
@@ -129,14 +128,14 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 await self._sendable.wait()
             else:
                 with self._state_handler():
-                    return self._q.send(item)
+                    return self._b.send(item)
 
     def try_recv(self) -> T:
         if self.empty():
             raise ChanEmpty()
         else:
             with self._state_handler():
-                return self._q.recv()
+                return self._b.recv()
 
     async def recv(self) -> T:
         while True:
@@ -144,7 +143,7 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 await self._recvable.wait()
             else:
                 with self._state_handler():
-                    return self._q.recv()
+                    return self._b.recv()
 
     async def _on_closed(self) -> None:
         await self._onclose.wait()
@@ -160,33 +159,9 @@ class _Chan(Chan[T], AsyncIterator[T]):
             raise ChanClosed()
 
 
-class _NormalQueue(Queue[T]):
-    def __init__(self, maxlen: int) -> None:
-        self._q: Deque[T] = deque(maxlen=max(1, maxlen))
-
-    def __len__(self) -> int:
-        return len(self._q)
-
-    def __iter__(self) -> Iterator[T]:
-        return iter(self._q)
-
-    @property
-    def maxlen(self) -> int:
-        return cast(int, self._q.maxlen)
-
-    def close(self) -> None:
-        self._q.clear()
-
-    def send(self, item: T) -> None:
-        self._q.append(item)
-
-    def recv(self) -> T:
-        return self._q.popleft()
-
-
-def chan(t: Optional[Type[T]] = None) -> Chan[T]:
-    q = _NormalQueue[T](maxlen=1)
-    return _Chan[T](q=q)
+def chan(t: Optional[Type[T]] = None, buffer: Optional[Buffer[T]] = None) -> Chan[T]:
+    b = buffer or NormalBuf[T](maxlen=1)
+    return _Chan[T](b=b)
 
 
 async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
