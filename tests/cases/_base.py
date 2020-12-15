@@ -1,7 +1,7 @@
-from asyncio import TimeoutError, gather, wait_for
+from asyncio import TimeoutError, create_task, gather, wait_for
 from itertools import islice
 from random import shuffle
-from typing import Any, Awaitable, MutableSequence, Protocol
+from typing import Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Chan, ChanClosed
@@ -88,6 +88,14 @@ class BaseCases:
             self.assertEqual(len(self.ch), 0)
 
         async def test_2(self) -> None:
+            async def cont() -> None:
+                await gather([] << self.ch, [] << self.ch)
+
+            task = create_task(cont())
+            await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
+
+        async def test_3(self) -> None:
+            self.skipTest("no")
             sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
             recvs = islice(iter(lambda: () << self.ch, None), REPEAT_FACTOR)
             cos: MutableSequence[Awaitable[int]] = [*sends, *recvs]
