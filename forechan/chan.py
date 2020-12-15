@@ -146,15 +146,15 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 with self._state_handler():
                     return self._q.popleft()
 
-    async def _closed_notif(self) -> None:
+    async def _on_closed(self) -> None:
         await self._onclose.wait()
 
-    async def _sendable_notif(self) -> None:
+    async def _on_sendable(self) -> None:
         await self._sendable.wait()
         if not self:
             raise ChanClosed()
 
-    async def _recvable_notif(self) -> None:
+    async def _on_recvable(self) -> None:
         await self._recvable.wait()
         if not self:
             raise ChanClosed()

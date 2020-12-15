@@ -25,7 +25,7 @@ async def select(
         async def poll() -> None:
             while True:
                 try:
-                    await c._recvable_notif()
+                    await c._on_recvable()
                 except ChanClosed:
                     break
                 else:

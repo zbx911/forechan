@@ -133,36 +133,36 @@ class BaseCases:
     class ClosedNotif(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
-                await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
+                await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
             await self.ch.close()
-            await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
+            await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
             await self.ch.close()
             with self.assertRaises(ChanClosed):
-                await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+                await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
             with self.assertRaises(ChanClosed):
-                await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+                await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
 
     class SendableNotif(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             await (self.ch << 1)
             with self.assertRaises(TimeoutError):
-                await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+                await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
-            await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
+            await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
 
     class RecvableNotif(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
             with self.assertRaises(TimeoutError):
-                await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+                await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
             await (self.ch << 1)
-            await wait_for(self.ch._recvable_notif(), timeout=SMOL_TIME)
+            await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
 
 
 BASE_CASES = tuple(extract_testcases(BaseCases))

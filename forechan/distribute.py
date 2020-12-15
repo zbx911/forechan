@@ -26,7 +26,7 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
         async def poll() -> None:
             while True:
                 try:
-                    await ch._sendable_notif()
+                    await ch._on_sendable()
                 except ChanClosed:
                     break
                 else:

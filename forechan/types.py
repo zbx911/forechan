@@ -94,15 +94,15 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
-    async def _closed_notif(self) -> None:
+    async def _on_closed(self) -> None:
         ...
 
     @abstractmethod
-    async def _sendable_notif(self) -> None:
+    async def _on_sendable(self) -> None:
         ...
 
     @abstractmethod
-    async def _recvable_notif(self) -> None:
+    async def _on_recvable(self) -> None:
         ...
 
 

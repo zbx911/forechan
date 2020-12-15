@@ -13,7 +13,7 @@ async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -
 
         async def cont() -> None:
             with wg:
-                await ch._closed_notif()
+                await ch._on_closed()
 
         create_task(cont())
 
