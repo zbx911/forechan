@@ -1,10 +1,31 @@
 from asyncio.tasks import create_task, gather
-from typing import Any, Iterable, TypeVar
+from typing import Any, AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
-from .types import Chan
+from .chan import chan
+from .types import Chan, ChanClosed
 from .wait_group import wait_group
 
 T = TypeVar("T")
+
+
+async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
+    ch: Chan[T] = chan()
+
+    async def gen() -> AsyncIterator[T]:
+        for item in cast(Iterable[T], it):
+            yield item
+
+    ait = gen() if isinstance(it, Iterable) else it
+
+    async def cont() -> None:
+        async for item in ait:
+            try:
+                await ch.send(item)
+            except ChanClosed:
+                break
+
+    create_task(cont())
+    return ch
 
 
 async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -> None:

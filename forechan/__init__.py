@@ -1,5 +1,5 @@
 from .buffers import DroppingBuf, NormalBuf, SlidingBuf
-from .chan import chan, to_chan
+from .chan import chan
 from .distribute import distribute
 from .fan_in import fan_in
 from .fan_out import fan_out
