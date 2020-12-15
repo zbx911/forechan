@@ -42,11 +42,11 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
-    def __le__(self, item: T) -> None:
+    def __lt__(self, item: T) -> None:
         ...
 
     @abstractmethod
-    def __rle__(self, _: Any) -> T:
+    def __gt__(self, _: Any) -> T:
         ...
 
     @abstractmethod

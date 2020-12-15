@@ -13,6 +13,7 @@ _tests_ = join(_base_, "tests", "cases")
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("-v", "--verbosity", action="count", default=1)
+    parser.add_argument("-f", "--fail", action="store_true", default=False)
     parser.add_argument("-p", "--pattern", default="*.py")
     return parser.parse_args()
 
@@ -21,7 +22,7 @@ def main() -> None:
     args = parse_args()
     loader = TestLoader()
     suite = loader.discover(_tests_, top_level_dir=_parent_, pattern=args.pattern)
-    runner = TextTestRunner(verbosity=args.verbosity)
+    runner = TextTestRunner(verbosity=args.verbosity, failfast=args.fail)
     runner.run(suite)
 
 

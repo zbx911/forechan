@@ -46,10 +46,10 @@ class _Chan(Chan[T], AsyncIterator[T]):
         except ChanClosed:
             raise StopAsyncIteration()
 
-    def __le__(self, item: T) -> None:
+    def __lt__(self, item: T) -> None:
         self.try_send(item)
 
-    def __rle__(self, _: Any) -> T:
+    def __gt__(self, _: Any) -> T:
         return self.try_recv()
 
     async def __lshift__(self, item: T) -> None:
