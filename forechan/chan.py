@@ -85,20 +85,19 @@ class _Chan(Chan[T], AsyncIterator[T]):
                 pass
 
     async def send(self, item: T) -> None:
-        with self._state_handler():
-            while True:
-                if self.full():
-                    await self._sendable.wait()
-                if not self.full():
-                    self._q.append(item)
-                    break
+        while True:
+            if self.full():
+                await self._sendable.wait()
+            else:
+                with self._state_handler():
+                    return self._q.append(item)
 
     async def recv(self) -> T:
-        with self._state_handler():
-            while True:
-                if self.empty():
-                    await self._recvable.wait()
-                if not self.empty():
+        while True:
+            if self.empty():
+                await self._recvable.wait()
+            else:
+                with self._state_handler():
                     return self._q.popleft()
 
     async def _closed_notif(self) -> None:
