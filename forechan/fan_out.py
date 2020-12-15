@@ -2,7 +2,7 @@ from asyncio.tasks import create_task, gather
 from itertools import islice
 from typing import Sequence, Set, TypeVar
 
-from ._ops import cascading_close
+from .ops import cascading_close
 from .chan import chan
 from .types import Chan, ChanClosed
 

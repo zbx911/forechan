@@ -2,7 +2,7 @@ from asyncio import gather
 from asyncio.tasks import create_task
 from typing import Sequence, TypeVar
 
-from ._ops import cascading_close
+from .ops import cascading_close
 from .types import Chan
 
 T = TypeVar("T")

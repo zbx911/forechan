@@ -4,7 +4,7 @@ from collections import deque
 from itertools import chain
 from typing import Any, Deque, Tuple
 
-from ._ops import cascading_close
+from .ops import cascading_close
 from .chan import chan
 from .types import Chan, ChanClosed
 

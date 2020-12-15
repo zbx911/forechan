@@ -2,7 +2,7 @@ from asyncio.tasks import create_task
 from typing import TypeVar
 
 from .chan import chan
-from ._ops import cascading_close
+from .ops import cascading_close
 from .select import select
 from .types import Chan, ChanClosed
 

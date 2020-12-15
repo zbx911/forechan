@@ -1,7 +1,7 @@
 from asyncio.tasks import create_task
 from typing import AsyncIterator, Callable, TypeVar
 
-from ._ops import cascading_close
+from .ops import cascading_close
 from .chan import chan
 from .types import Chan, ChanClosed
 

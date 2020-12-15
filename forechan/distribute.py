@@ -3,7 +3,7 @@ from asyncio.tasks import create_task, gather
 from collections import deque
 from typing import Deque, TypeVar
 
-from ._ops import cascading_close
+from .ops import cascading_close
 from .types import Chan, ChanClosed
 
 T = TypeVar("T")
