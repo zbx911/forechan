@@ -29,7 +29,7 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
 
     async def close_upstream() -> None:
         await wg.wait()
-        await close(ch, close=cascade_close)
+        close(ch, close=cascade_close)
 
     create_task(close_upstream())
 

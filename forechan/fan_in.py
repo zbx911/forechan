@@ -14,12 +14,12 @@ async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan
 
     async def close_upstream() -> None:
         await out._closed_notif()
-        await close(ch, *chs, close=cascade_close)
+        close(ch, *chs, close=cascade_close)
 
     create_task(close_upstream())
 
     async def cont() -> None:
-        async with out:
+        with out:
             async for _, item in await select(ch, *chs):
                 try:
                     await out.send(item)

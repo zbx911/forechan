@@ -18,12 +18,12 @@ async def trans(
 
     async def close_upstream() -> None:
         await out._closed_notif()
-        await close(ch, close=cascade_close)
+        close(ch, close=cascade_close)
 
     create_task(close_upstream())
 
     async def cont() -> None:
-        async with out:
+        with out:
             async for item in trans(ch):
                 try:
                     await out.send(item)

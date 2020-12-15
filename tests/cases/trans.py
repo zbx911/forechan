@@ -41,7 +41,7 @@ class UpstreamSend(TransBaseSetup.SetupChan):
     async def test_3(self) -> None:
         sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
         recvs = islice(iter(lambda: [] << self.ch, None), REPEAT_FACTOR)
-        cos: MutableSequence[Awaitable[int]] = [*sends, *recvs]
+        cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
         shuffle(cos)
         await wait_for(gather(*cos), timeout=MODICUM_TIME)
         self.assertEqual(len(self.ch), 0)

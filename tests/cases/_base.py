@@ -1,7 +1,7 @@
 from asyncio import TimeoutError, create_task, gather, wait_for
 from itertools import islice
 from random import shuffle
-from typing import Awaitable, MutableSequence, Protocol
+from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Chan, ChanClosed
@@ -19,7 +19,7 @@ class BaseCases:
             self.assertTrue(self.ch)
 
         async def test_2(self) -> None:
-            await self.ch.close()
+            self.ch.close()
             self.assertFalse(self.ch)
 
         async def test_3(self) -> None:
@@ -33,7 +33,8 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await (self.ch << 1)
 
-            await gather(c1(), c2(), self.ch.close())
+            self.ch.close()
+            await gather(c1(), c2())
 
         async def test_4(self) -> None:
             async def c1() -> None:
@@ -44,7 +45,8 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await ([] << self.ch)
 
-            await gather(c1(), c2(), self.ch.close())
+            self.ch.close()
+            await gather(c1(), c2())
 
     class SendRecv(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
@@ -59,13 +61,13 @@ class BaseCases:
 
     class SendToClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
-            await self.ch.close()
+            self.ch.close()
             with self.assertRaises(ChanClosed):
                 await (self.ch << 1)
 
     class RecvFromClosed(IsolatedAsyncioTestCase, HasChannel):
         async def test_1(self) -> None:
-            await self.ch.close()
+            self.ch.close()
             with self.assertRaises(ChanClosed):
                 await ([] << self.ch)
 
@@ -97,7 +99,7 @@ class BaseCases:
         async def test_3(self) -> None:
             sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
             recvs = islice(iter(lambda: () << self.ch, None), REPEAT_FACTOR)
-            cos: MutableSequence[Awaitable[int]] = [*sends, *recvs]
+            cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
             await wait_for(gather(*cos), timeout=MODICUM_TIME)
             self.assertEqual(len(self.ch), 0)
@@ -108,11 +110,11 @@ class BaseCases:
                 await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
-            await self.ch.close()
+            self.ch.close()
             await wait_for(self.ch._closed_notif(), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
-            await self.ch.close()
+            self.ch.close()
             with self.assertRaises(ChanClosed):
                 await wait_for(self.ch._sendable_notif(), timeout=SMOL_TIME)
             with self.assertRaises(ChanClosed):

@@ -19,7 +19,7 @@ async def select(
 
     async def close_upstream() -> None:
         await out._closed_notif()
-        await close(ch, *chs, close=cascade_close)
+        close(ch, *chs, close=cascade_close)
 
     create_task(close_upstream())
 
