@@ -95,7 +95,6 @@ class BaseCases:
             await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
-            self.skipTest("no")
             sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
             recvs = islice(iter(lambda: () << self.ch, None), REPEAT_FACTOR)
             cos: MutableSequence[Awaitable[int]] = [*sends, *recvs]

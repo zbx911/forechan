@@ -39,7 +39,6 @@ class UpstreamSend(TransBaseSetup.SetupChan):
         await fut
 
     async def test_3(self) -> None:
-        self.skipTest("no")
         sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
         recvs = islice(iter(lambda: [] << self.ch, None), REPEAT_FACTOR)
         cos: MutableSequence[Awaitable[int]] = [*sends, *recvs]
