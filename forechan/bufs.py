@@ -1,23 +1,12 @@
 from collections import deque
-from heapq import heappop, heappush
-from typing import (
-    Callable,
-    Deque,
-    Generic,
-    Iterator,
-    List,
-    MutableSequence,
-    Sized,
-    TypeVar,
-    cast,
-)
+from typing import Deque, Iterable, Iterator, MutableSequence, Sized, TypeVar, cast
 
-from .types import Buf
+from .types import Buf, Closable
 
 T = TypeVar("T")
 
 
-class _BaseBuf(Sized, Generic[T]):
+class _BaseBuf(Sized, Closable, Iterable[T]):
     _q: MutableSequence[T]
 
     def __len__(self) -> int:
@@ -34,6 +23,10 @@ class _BaseBuf(Sized, Generic[T]):
 
 
 class NormalBuf(_BaseBuf[T], Buf[T]):
+    """
+    When at capacity, block
+    """
+
     def __init__(self, maxlen: int) -> None:
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
 
@@ -52,30 +45,22 @@ class NormalBuf(_BaseBuf[T], Buf[T]):
 
 
 class SlidingBuf(NormalBuf[T]):
-    def send(self, item: T) -> None:
-        if len(self) < self.maxlen:
-            self._q.append(item)
+    """
+    When at capacity, dispose earliest messages
+    """
+
+    def full(self) -> bool:
+        return False
 
 
 class DroppingBuf(NormalBuf[T]):
+    """
+    When at capacity, dispose latest messages
+    """
+
+    def full(self) -> bool:
+        return False
+
     def send(self, item: T) -> None:
-        if len(self) >= self.maxlen:
-            self._q.popleft()
+        if len(self) < self.maxlen:
             self._q.append(item)
-
-
-class PiorityBuf(_BaseBuf[T], Buf[T]):
-    def __init__(self, determinate: Callable[[T], int], maxlen: int) -> None:
-        self._ml = maxlen
-        self._det = determinate
-        self._q: List[T] = []
-
-    @property
-    def maxlen(self) -> int:
-        return self._ml
-
-    def send(self, item: T) -> None:
-        heappush(self._q, item)
-
-    def recv(self) -> T:
-        return heappop(self._q)

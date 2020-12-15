@@ -28,8 +28,20 @@ class ChanFull(Exception):
     pass
 
 
+class Closable(Protocol):
+    @abstractmethod
+    def close(self) -> None:
+        ...
+
+
+class AsyncClosable(Protocol):
+    @abstractmethod
+    async def close(self) -> None:
+        ...
+
+
 @runtime_checkable
-class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
+class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]):
     @abstractmethod
     def __bool__(self) -> bool:
         ...
@@ -67,10 +79,6 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
-    async def close(self) -> None:
-        ...
-
-    @abstractmethod
     async def _on_closed(self) -> None:
         ...
 
@@ -104,22 +112,13 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
 
 @runtime_checkable
-class Buf(Sized, Iterable[T], Protocol[T]):
-    @property
-    @abstractmethod
-    def maxlen(self) -> int:
-        ...
-
+class Buf(Sized, Closable, Iterable[T], Protocol[T]):
     @abstractmethod
     def empty(self) -> bool:
         ...
 
     @abstractmethod
     def full(self) -> bool:
-        ...
-
-    @abstractmethod
-    def close(self) -> None:
         ...
 
     @abstractmethod
