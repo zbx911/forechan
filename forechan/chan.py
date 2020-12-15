@@ -3,7 +3,7 @@ from asyncio.locks import Event
 from contextlib import contextmanager
 from typing import Any, AsyncIterator, Iterator, Optional, Type, TypeVar
 
-from .buffers import NormalBuf
+from .bufs import NormalBuf
 from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
 
 T = TypeVar("T")

@@ -1,7 +1,7 @@
 from asyncio.tasks import create_task
 from typing import Callable, Optional, Type, TypeVar
 
-from .buffers import SlidingBuf
+from .bufs import SlidingBuf
 from .chan import chan
 from .types import Chan, ChanClosed
 

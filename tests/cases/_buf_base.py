@@ -1,7 +1,7 @@
-from forechan.types import Buf
 from typing import Protocol
 from unittest import IsolatedAsyncioTestCase
 
+from ...forechan.types import Buf
 from ..da import extract_testcases
 
 

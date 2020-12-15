@@ -1,4 +1,4 @@
-from .buffers import DroppingBuf, NormalBuf, SlidingBuf
+from .bufs import DroppingBuf, NormalBuf, SlidingBuf
 from .chan import chan
 from .distribute import distribute
 from .fan_in import fan_in
