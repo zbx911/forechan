@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from asyncio import sleep
 from asyncio.locks import Event
 from contextlib import contextmanager
@@ -9,25 +10,17 @@ from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
 T = TypeVar("T")
 
 
-class _Chan(Chan[T], AsyncIterator[T]):
-    def __init__(self, b: Buf[T]) -> None:
-        self._b = b
-        self._sendable, self._recvable = Event(), Event()
-        self._onclose = Event()
-        self._sendable.set()
-
+class _BaseChan(Chan[T], AsyncIterator[T]):
     @property
-    def maxlen(self) -> int:
-        return self._b.maxlen
+    @abstractmethod
+    def _b(self) -> Buf[T]:
+        ...
 
     def __str__(self) -> str:
         if self:
             return f"chan[{', '.join(str(item) for item in self._b)}]"
         else:
             return "chan|<closed>|"
-
-    def __bool__(self) -> bool:
-        return not self._onclose.is_set()
 
     def __len__(self) -> int:
         return len(self._b)
@@ -63,13 +56,24 @@ class _Chan(Chan[T], AsyncIterator[T]):
         if not self:
             raise ChanClosed()
         else:
-            return not len(self)
+            return self._b.empty()
 
     def full(self) -> bool:
         if not self:
             raise ChanClosed()
         else:
-            return len(self) >= self.maxlen
+            return self._b.full()
+
+
+class _Chan(_BaseChan[T]):
+    def __init__(self, b: Buf[T]) -> None:
+        self._b = b
+        self._sendable, self._recvable = Event(), Event()
+        self._onclose = Event()
+        self._sendable.set()
+
+    def __bool__(self) -> bool:
+        return not self._onclose.is_set()
 
     async def close(self) -> None:
         await sleep(0)

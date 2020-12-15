@@ -4,7 +4,8 @@ from typing import (
     Callable,
     Deque,
     Generic,
-    Iterator, List,
+    Iterator,
+    List,
     MutableSequence,
     Sized,
     TypeVar,
@@ -12,12 +13,12 @@ from typing import (
 )
 from heapq import heappop, heappush
 
-from .types import Buf
+from .types import Buf, Sizeable
 
 T = TypeVar("T")
 
 
-class _AbsBuf(Sized, Generic[T]):
+class _BaseBuf(Sized, Sizeable, Generic[T]):
     @property
     @abstractmethod
     def _q(self) -> MutableSequence[T]:
@@ -29,17 +30,23 @@ class _AbsBuf(Sized, Generic[T]):
     def __iter__(self) -> Iterator[T]:
         return iter(self._q)
 
+    def empty(self) -> bool:
+        return not len(self)
+
     def close(self) -> None:
         self._q.clear()
 
 
-class NormalBuf(_AbsBuf[T], Buf[T]):
+class NormalBuf(_BaseBuf[T], Buf[T]):
     def __init__(self, maxlen: int) -> None:
         self._q: Deque[T] = deque(maxlen=max(1, maxlen))
 
     @property
     def maxlen(self) -> int:
         return cast(int, self._q.maxlen)
+
+    def full(self) -> bool:
+        return len(self) >= self.maxlen
 
     def send(self, item: T) -> None:
         self._q.append(item)
@@ -61,7 +68,7 @@ class DroppingBuf(NormalBuf[T]):
             self._q.append(item)
 
 
-class PiorityBuf(_AbsBuf[T], Buf[T]):
+class PiorityBuf(_BaseBuf[T], Buf[T]):
     def __init__(self, determinate: Callable[[T], int], maxlen: int) -> None:
         self._ml = maxlen
         self._det = determinate
