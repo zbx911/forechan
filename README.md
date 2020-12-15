@@ -1,6 +1,6 @@
 # Forechan
 
-Go style `asyncio` channels with convinence methods & syntax.
+[go](https://github.com/golang/go) style `asyncio` channels.
 
 **Fully Typed with Generics**, `mypy` ready.
 
