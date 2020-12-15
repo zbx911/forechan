@@ -3,7 +3,7 @@ from itertools import count
 from typing import Tuple
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.rpc import mk_req
+from ...forechan.mq import mk_req
 from ...forechan.types import Chan
 
 
