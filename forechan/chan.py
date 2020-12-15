@@ -55,19 +55,19 @@ class _BaseChan(Boolable, Chan[T], AsyncIterator[T]):
     async def __rlshift__(self, _: Any) -> T:
         return await self.recv()
 
-    def sendable(self) -> bool:
+    def _sendable(self) -> bool:
         return bool(self) and not self._b.full()
 
-    def recvable(self) -> bool:
+    def _recvable(self) -> bool:
         return bool(self) and not self._b.empty()
 
 
 class _Chan(_BaseChan[T]):
     def __init__(self, b: Buf[T]) -> None:
         self._b: Buf[T] = b
-        self._sendable, self._recvable = Event(), Event()
+        self._sendable_ev, self._recvable_ev = Event(), Event()
         self._onclose = Event()
-        self._sendable.set()
+        self._sendable_ev.set()
 
     def __bool__(self) -> bool:
         return not self._onclose.is_set()
@@ -76,28 +76,28 @@ class _Chan(_BaseChan[T]):
         await sleep(0)
         self._b.close()
         self._onclose.set()
-        self._sendable.set()
-        self._recvable.set()
+        self._sendable_ev.set()
+        self._recvable_ev.set()
 
     @contextmanager
     def _state_handler(self) -> Iterator[None]:
         try:
             yield None
         finally:
-            if self.sendable():
-                self._sendable.set()
+            if self._sendable():
+                self._sendable_ev.set()
             else:
-                self._sendable.clear()
+                self._sendable_ev.clear()
 
-            if self.recvable():
-                self._recvable.set()
+            if self._recvable():
+                self._recvable_ev.set()
             else:
-                self._recvable.clear()
+                self._recvable_ev.clear()
 
     def try_peek(self) -> T:
         if not self:
             raise ChanClosed()
-        elif not self.recvable():
+        elif not self._recvable():
             raise ChanEmpty()
         else:
             return next(iter(self._b))
@@ -105,7 +105,7 @@ class _Chan(_BaseChan[T]):
     def try_send(self, item: T) -> None:
         if not self:
             raise ChanClosed()
-        elif not self.sendable():
+        elif not self._sendable():
             raise ChanFull()
         else:
             with self._state_handler():
@@ -115,8 +115,8 @@ class _Chan(_BaseChan[T]):
         while True:
             if not self:
                 raise ChanClosed()
-            elif not self.sendable():
-                await self._sendable.wait()
+            elif not self._sendable():
+                await self._sendable_ev.wait()
             else:
                 with self._state_handler():
                     return self._b.send(item)
@@ -124,7 +124,7 @@ class _Chan(_BaseChan[T]):
     def try_recv(self) -> T:
         if not self:
             raise ChanClosed()
-        elif not self.recvable():
+        elif not self._recvable():
             raise ChanEmpty()
         else:
             with self._state_handler():
@@ -134,8 +134,8 @@ class _Chan(_BaseChan[T]):
         while True:
             if not self:
                 raise ChanClosed()
-            elif not self.recvable():
-                await self._recvable.wait()
+            elif not self._recvable():
+                await self._recvable_ev.wait()
             else:
                 with self._state_handler():
                     return self._b.recv()
@@ -144,12 +144,12 @@ class _Chan(_BaseChan[T]):
         await self._onclose.wait()
 
     async def _on_sendable(self) -> None:
-        await self._sendable.wait()
+        await self._sendable_ev.wait()
         if not self:
             raise ChanClosed()
 
     async def _on_recvable(self) -> None:
-        await self._recvable.wait()
+        await self._recvable_ev.wait()
         if not self:
             raise ChanClosed()
 

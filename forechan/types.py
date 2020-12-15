@@ -59,15 +59,19 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
-    def sendable(self) -> bool:
+    def _sendable(self) -> bool:
         ...
 
     @abstractmethod
-    def recvable(self) -> bool:
+    def _recvable(self) -> bool:
         ...
 
     @abstractmethod
     async def close(self) -> None:
+        ...
+
+    @abstractmethod
+    async def _on_closed(self) -> None:
         ...
 
     @abstractmethod
@@ -83,19 +87,15 @@ class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
         ...
 
     @abstractmethod
+    async def _on_sendable(self) -> None:
+        ...
+
+    @abstractmethod
     def try_recv(self) -> T:
         ...
 
     @abstractmethod
     async def recv(self) -> T:
-        ...
-
-    @abstractmethod
-    async def _on_closed(self) -> None:
-        ...
-
-    @abstractmethod
-    async def _on_sendable(self) -> None:
         ...
 
     @abstractmethod

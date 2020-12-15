@@ -43,7 +43,7 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
                 while ready:
                     ch = ready.popleft()
                     try:
-                        if ch.sendable():
+                        if ch._sendable():
                             ch.try_send(item)
                     except ChanClosed:
                         pass
