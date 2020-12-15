@@ -41,6 +41,14 @@ class Chan(Sized, AsyncIterable[T], ContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
+    def __le__(self, item: T) -> None:
+        ...
+
+    @abstractmethod
+    def __rle__(self, _: Any) -> T:
+        ...
+
+    @abstractmethod
     async def __lshift__(self, item: T) -> None:
         ...
 
@@ -61,7 +69,19 @@ class Chan(Sized, AsyncIterable[T], ContextManager[None], Protocol[T]):
         ...
 
     @abstractmethod
+    def try_peek(self) -> T:
+        ...
+
+    @abstractmethod
+    def try_send(self, item: T) -> None:
+        ...
+
+    @abstractmethod
     async def send(self, item: T) -> None:
+        ...
+
+    @abstractmethod
+    def try_recv(self) -> T:
         ...
 
     @abstractmethod

@@ -3,7 +3,7 @@ from collections import deque
 from contextlib import contextmanager
 from typing import Any, AsyncIterator, Deque, Iterator, Optional, Type, TypeVar, cast
 
-from .types import Chan, ChanClosed
+from .types import Chan, ChanClosed, ChanEmpty, ChanFull
 
 T = TypeVar("T")
 
@@ -44,6 +44,12 @@ class _Chan(Chan[T], AsyncIterator[T]):
             return await self.recv()
         except ChanClosed:
             raise StopAsyncIteration()
+
+    def __le__(self, item: T) -> None:
+        self.try_send(item)
+
+    def __rle__(self, _: Any) -> T:
+        return self.try_recv()
 
     async def __lshift__(self, item: T) -> None:
         await self.send(item)
@@ -87,6 +93,19 @@ class _Chan(Chan[T], AsyncIterator[T]):
             except ChanClosed:
                 pass
 
+    def try_peek(self) -> T:
+        if self.empty():
+            raise ChanEmpty()
+        else:
+            return next(iter(self._q))
+
+    def try_send(self, item: T) -> None:
+        if self.full():
+            raise ChanFull()
+        else:
+            with self._state_handler():
+                self._q.append(item)
+
     async def send(self, item: T) -> None:
         while True:
             if self.full():
@@ -94,6 +113,13 @@ class _Chan(Chan[T], AsyncIterator[T]):
             else:
                 with self._state_handler():
                     return self._q.append(item)
+
+    def try_recv(self) -> T:
+        if self.empty():
+            raise ChanEmpty()
+        else:
+            with self._state_handler():
+                return self._q.popleft()
 
     async def recv(self) -> T:
         while True:
