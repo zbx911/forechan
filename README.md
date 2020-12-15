@@ -43,6 +43,7 @@ for _ in range(5):
     with wg:
       # do some work
 
+  create_task(cont())
 # will wait for all work to be completed
 await wg.wait()
 ```
