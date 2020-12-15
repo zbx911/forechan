@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from asyncio import sleep
 from asyncio.locks import Event
 from contextlib import contextmanager
@@ -11,10 +10,7 @@ T = TypeVar("T")
 
 
 class _BaseChan(Chan[T], AsyncIterator[T]):
-    @property
-    @abstractmethod
-    def _b(self) -> Buf[T]:
-        ...
+    _b: Buf[T]
 
     def __str__(self) -> str:
         if self:
@@ -67,7 +63,7 @@ class _BaseChan(Chan[T], AsyncIterator[T]):
 
 class _Chan(_BaseChan[T]):
     def __init__(self, b: Buf[T]) -> None:
-        self._b = b
+        self._b: Buf[T] = b
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
         self._sendable.set()

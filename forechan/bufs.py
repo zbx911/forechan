@@ -1,5 +1,5 @@
-from abc import abstractmethod
 from collections import deque
+from heapq import heappop, heappush
 from typing import (
     Callable,
     Deque,
@@ -11,7 +11,6 @@ from typing import (
     TypeVar,
     cast,
 )
-from heapq import heappop, heappush
 
 from .types import Buf, Sizeable
 
@@ -19,10 +18,7 @@ T = TypeVar("T")
 
 
 class _BaseBuf(Sized, Sizeable, Generic[T]):
-    @property
-    @abstractmethod
-    def _q(self) -> MutableSequence[T]:
-        ...
+    _q: MutableSequence[T]
 
     def __len__(self) -> int:
         return len(self._q)
