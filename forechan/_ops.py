@@ -18,6 +18,7 @@ async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -
         create_task(cont())
 
     async def close() -> None:
+        await wg.wait()
         await gather(*(ch.close() for ch in dest))
 
     create_task(close())
