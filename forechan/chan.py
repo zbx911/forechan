@@ -33,6 +33,9 @@ class _Chan(Chan[T], AsyncIterator[T]):
     def __len__(self) -> int:
         return len(self._q)
 
+    async def __aenter__(self) -> Chan[T]:
+        return self
+
     async def __aexit__(self, *_: Any) -> None:
         await self.close()
 

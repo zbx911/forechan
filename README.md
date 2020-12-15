@@ -12,12 +12,13 @@ Inspired by [`core.async`](https://github.com/clojure/core.async) from [clojure]
 
 ```python
 ch = chan(int)         # Chan[int]
-await (ch << 2)        # send
-two = await ([] << ch) # recv
+await (ch << 2)        # or use `await ch.send(x)`
+two = await ([] << ch) # or use `await ch.recv()`
 assert two == 2
 
-# or use `await ch.send(x)` & `await ch.recv()`
-# up to you
+# Most functions throw `ChanClosed` after closing
+# But `ch.close()` is idempotent
+await ch.close()
 ```
 
 ### Select
@@ -32,34 +33,6 @@ async for ch, item in await select(ch1, ch2):
     # do something with `item`
 ```
 
-### Consumer
-
-```python
-async def consumer() -> None:
-  async for item in ch: # `Chan[T]` is also AsyncIterator
-    pass
-    # do something with `item`, until `ch` is closed
-    # or call `await ch.close()` to shutdown producer
-```
-
-### Producer
-
-```python
-def producer() -> Chan[int]:
-  ch = chan(int)
-
-  async def cont() -> None:
-    async with ch: # `Chan[T]` is AsyncContextManager, auto close `ch` when done
-      for i in range(100):
-        await (ch << i)
-
-  create_task(cont())
-  return ch
-
-# or call `await ch.close()` any time
-# up to you
-```
-
 ### Synchronous
 
 ```python
@@ -69,11 +42,7 @@ two = ([] < ch)      # or use `ch.try_recv()`  throws `ChanEmpty`
 assert two == 2
 ```
 
-## Doc
-
-Most QOL (Quality of Life) functions that return a `Chan[T]` such as `select(*chs)` or `trans(xform, ch)` or `fan_in(*chs)` take a named param: `cascade_close`.
-
-if `cascade_close = True`, which is the default. Closing the returned channel will also close upstream channels.
+## Patterns
 
 ### Basic
 
@@ -111,6 +80,40 @@ async def fn() -> None:
 
 create_task(fn())
 ```
+
+### Consumer
+
+```python
+async def consumer() -> None:
+  async for item in ch: # `Chan[T]` is also AsyncIterator
+    pass
+    # do something with `item`, until `ch` is closed
+    # or call `await ch.close()` to shutdown producer
+```
+
+### Producer
+
+```python
+def producer() -> Chan[int]:
+  ch = chan(int)
+
+  async def cont() -> None:
+    async with ch: # `Chan[T]` is AsyncContextManager, auto close `ch` when done
+      for i in range(100):
+        await (ch << i)
+
+  create_task(cont())
+  return ch
+
+# or call `await ch.close()` any time
+# up to you
+```
+
+## QOL Patterns
+
+Most QOL (Quality of Life) functions that return a `Chan[T]` such as `select(*chs)` or `trans(xform, ch)` or `fan_in(*chs)` take a named param: `cascade_close`.
+
+if `cascade_close = True`, which is the default. Closing the returned channel will also close upstream channels.
 
 ### Fan in
 

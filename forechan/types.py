@@ -28,13 +28,17 @@ class ChanFull(Exception):
 
 
 @runtime_checkable
-class Chan(Sized, AsyncIterable[T], AsyncContextManager[None], Protocol[T]):
+class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractproperty
     def maxlen(self) -> int:
         ...
 
     @abstractmethod
     def __bool__(self) -> bool:
+        ...
+
+    @abstractmethod
+    async def __aenter__(self) -> Chan[T]:
         ...
 
     @abstractmethod
