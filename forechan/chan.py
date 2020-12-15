@@ -1,8 +1,21 @@
 from asyncio import sleep
 from asyncio.locks import Event
+from asyncio.tasks import create_task
 from collections import deque
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Deque, Iterator, Optional, Type, TypeVar, cast
+from typing import (
+    Any,
+    AsyncIterable,
+    AsyncIterator,
+    Deque,
+    Iterable,
+    Iterator,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from .types import Chan, ChanClosed, ChanEmpty, ChanFull
 
@@ -149,3 +162,23 @@ class _Chan(Chan[T], AsyncIterator[T]):
 
 def chan(t: Optional[Type[T]] = None, maxlen: int = 1) -> Chan[T]:
     return _Chan[T](maxlen=maxlen)
+
+
+async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
+    ch: Chan[T] = chan()
+
+    async def gen() -> AsyncIterator[T]:
+        for item in cast(Iterable[T], it):
+            yield item
+
+    ait = gen() if isinstance(it, Iterable) else it
+
+    async def cont() -> None:
+        async for item in ait:
+            try:
+                await ch.send(item)
+            except ChanClosed:
+                break
+
+    create_task(cont())
+    return ch
