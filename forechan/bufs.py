@@ -12,12 +12,12 @@ from typing import (
     cast,
 )
 
-from .types import Buf, Sizeable
+from .types import Buf
 
 T = TypeVar("T")
 
 
-class _BaseBuf(Sized, Sizeable, Generic[T]):
+class _BaseBuf(Sized, Generic[T]):
     _q: MutableSequence[T]
 
     def __len__(self) -> int:

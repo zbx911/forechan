@@ -1,7 +1,8 @@
+from abc import abstractmethod
 from asyncio import sleep
 from asyncio.locks import Event
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Iterator, Optional, Type, TypeVar
+from typing import Any, AsyncIterator, Iterator, Optional, Protocol, Type, TypeVar
 
 from .bufs import NormalBuf
 from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
@@ -9,7 +10,13 @@ from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
 T = TypeVar("T")
 
 
-class _BaseChan(Chan[T], AsyncIterator[T]):
+class Boolable(Protocol):
+    @abstractmethod
+    def __bool__(self) -> bool:
+        ...
+
+
+class _BaseChan(Boolable, Chan[T], AsyncIterator[T]):
     _b: Buf[T]
 
     def __str__(self) -> str:
@@ -48,17 +55,11 @@ class _BaseChan(Chan[T], AsyncIterator[T]):
     async def __rlshift__(self, _: Any) -> T:
         return await self.recv()
 
-    def empty(self) -> bool:
-        if not self:
-            raise ChanClosed()
-        else:
-            return self._b.empty()
+    def sendable(self) -> bool:
+        return bool(self) and not self._b.full()
 
-    def full(self) -> bool:
-        if not self:
-            raise ChanClosed()
-        else:
-            return self._b.full()
+    def recvable(self) -> bool:
+        return bool(self) and not self._b.empty()
 
 
 class _Chan(_BaseChan[T]):
@@ -83,27 +84,28 @@ class _Chan(_BaseChan[T]):
         try:
             yield None
         finally:
-            try:
-                if self.empty():
-                    self._recvable.clear()
-                else:
-                    self._recvable.set()
+            if self.sendable():
+                self._sendable.set()
+            else:
+                self._sendable.clear()
 
-                if self.full():
-                    self._sendable.clear()
-                else:
-                    self._sendable.set()
-            except ChanClosed:
-                pass
+            if self.recvable():
+                self._recvable.set()
+            else:
+                self._recvable.clear()
 
     def try_peek(self) -> T:
-        if self.empty():
+        if not self:
+            raise ChanClosed()
+        elif not self.recvable():
             raise ChanEmpty()
         else:
             return next(iter(self._b))
 
     def try_send(self, item: T) -> None:
-        if self.full():
+        if not self:
+            raise ChanClosed()
+        elif not self.sendable():
             raise ChanFull()
         else:
             with self._state_handler():
@@ -111,14 +113,18 @@ class _Chan(_BaseChan[T]):
 
     async def send(self, item: T) -> None:
         while True:
-            if self.full():
+            if not self:
+                raise ChanClosed()
+            elif not self.sendable():
                 await self._sendable.wait()
             else:
                 with self._state_handler():
                     return self._b.send(item)
 
     def try_recv(self) -> T:
-        if self.empty():
+        if not self:
+            raise ChanClosed()
+        elif not self.recvable():
             raise ChanEmpty()
         else:
             with self._state_handler():
@@ -126,7 +132,9 @@ class _Chan(_BaseChan[T]):
 
     async def recv(self) -> T:
         while True:
-            if self.empty():
+            if not self:
+                raise ChanClosed()
+            elif not self.recvable():
                 await self._recvable.wait()
             else:
                 with self._state_handler():

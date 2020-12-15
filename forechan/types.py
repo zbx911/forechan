@@ -29,18 +29,7 @@ class ChanFull(Exception):
 
 
 @runtime_checkable
-class Sizeable(Protocol):
-    @abstractmethod
-    def empty(self) -> bool:
-        ...
-
-    @abstractmethod
-    def full(self) -> bool:
-        ...
-
-
-@runtime_checkable
-class Chan(Sized, Sizeable, AsyncIterable[T], AsyncContextManager, Protocol[T]):
+class Chan(Sized, AsyncIterable[T], AsyncContextManager, Protocol[T]):
     @abstractmethod
     def __bool__(self) -> bool:
         ...
@@ -67,6 +56,14 @@ class Chan(Sized, Sizeable, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
     @abstractmethod
     async def __rlshift__(self, _: Any) -> T:
+        ...
+
+    @abstractmethod
+    def sendable(self) -> bool:
+        ...
+
+    @abstractmethod
+    def recvable(self) -> bool:
         ...
 
     @abstractmethod
@@ -107,10 +104,18 @@ class Chan(Sized, Sizeable, AsyncIterable[T], AsyncContextManager, Protocol[T]):
 
 
 @runtime_checkable
-class Buf(Sized, Sizeable, Iterable[T], Protocol[T]):
+class Buf(Sized, Iterable[T], Protocol[T]):
     @property
     @abstractmethod
     def maxlen(self) -> int:
+        ...
+
+    @abstractmethod
+    def empty(self) -> bool:
+        ...
+
+    @abstractmethod
+    def full(self) -> bool:
         ...
 
     @abstractmethod

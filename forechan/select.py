@@ -40,7 +40,7 @@ async def select(
             while ready:
                 c = ready.pop()
                 try:
-                    if not c.empty():
+                    if c.recvable():
                         item = c.try_recv()
                         await out.send((c, item))
                 except ChanClosed:
