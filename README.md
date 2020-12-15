@@ -51,9 +51,9 @@ await wg.wait()
 ### Synchronous
 
 ```python
-head = ch.try_peek() # Throws `ChanEmpty`
-(ch < 2)             # or use `ch.try_send(2)` throws `ChanFull`
-two = ([] < ch)      # or use `ch.try_recv()`  throws `ChanEmpty`
+head = ch.try_peek() # can throw `ChanEmpty`
+(ch < 2)             # or use `ch.try_send(2)` ,can throw `ChanFull`
+two = ([] < ch)      # or use `ch.try_recv()`  ,can throw `ChanEmpty`
 assert two == 2
 ```
 
