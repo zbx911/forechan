@@ -28,8 +28,7 @@ def mk_loader(
     def load_tests(
         loader: TestLoader, standard_tests: TestSuite, pattern: Optional[str]
     ) -> TestSuite:
-        ret = TestSuite()
-        ret.addTest(standard_tests)
+        ret = TestSuite((standard_tests,))
         for cls in tests:
             suite = loader.loadTestsFromTestCase(cls)
             ret.addTests(suite)
