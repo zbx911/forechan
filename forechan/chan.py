@@ -11,7 +11,6 @@ T = TypeVar("T")
 
 class _Chan(Chan[T], AsyncIterator[T]):
     def __init__(self, b: Buffer[T]) -> None:
-        super().__init__()
         self._b = b
         self._sendable, self._recvable = Event(), Event()
         self._onclose = Event()
