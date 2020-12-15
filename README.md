@@ -42,9 +42,7 @@ two = ([] < ch)      # or use `ch.try_recv()`  throws `ChanEmpty`
 assert two == 2
 ```
 
-## Patterns
-
-### Basic
+## Basic Concurrency Patterns
 
 ```python
 if ch:
@@ -109,13 +107,27 @@ def producer() -> Chan[int]:
 # up to you
 ```
 
-## QOL Patterns
+### Wait Group
+
+```python
+wg = wait_group()
+
+for _ in range(5):
+  async def cont() -> None:
+    with wg:
+      # do some work
+
+# will wait for all work to be completed
+await wg.wait()
+```
+
+## Common Patterns
 
 Most QOL (Quality of Life) functions that return a `Chan[T]` such as `select(*chs)` or `trans(xform, ch)` or `fan_in(*chs)` take a named param: `cascade_close`.
 
 if `cascade_close = True`, which is the default. Closing the returned channel will also close upstream channels.
 
-### Fan in
+### Fan In
 
 ```python
 cs: Sequence[Chan[T]] = produce_bunch_of_chans()
@@ -125,7 +137,7 @@ cs: Sequence[Chan[T]] = produce_bunch_of_chans()
 ch: Chan[T] = await fan_in(*cs)
 ```
 
-### Fan out
+### Fan Out
 
 ```python
 ch: Chan[T] = produce_some_channel()
@@ -135,10 +147,11 @@ ch: Chan[T] = produce_some_channel()
 cs: Sequence[Chan[T]] = await fan_out(ch)
 ```
 
-### Generator Based Transform
+### Stream Transform
 
 ```python
 # regular old python generator
+# can do `map` and `filter`, `flatmap`, whatever
 async def xform(stream: AsyncIterator[int]) -> AsyncIterator[str]:
   for i in stream:
     if i > 100:
@@ -152,3 +165,9 @@ ch1: Chan[int] = one_to_inf()
 # `ch2` is both a mapped and filtered stream
 ch2: Chan[str] = await trans(xform, ch=ch1)
 ```
+
+## Architectural Patterns
+
+### RPC
+
+###
