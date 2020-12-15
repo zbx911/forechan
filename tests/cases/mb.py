@@ -5,6 +5,8 @@ from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.mb import mb
 from ...forechan.types import Chan
+from ..consts import REPEAT_FACTOR
+from ..da import profiler
 
 
 async def echo(
@@ -27,6 +29,9 @@ class MailBoxBaseSetup:
 
 class MailBoxAskReply(MailBoxBaseSetup.SetupChan):
     async def test_1(self) -> None:
-        create_task(echo(self.ask, reply=self.reply, cycles=1))
-        ans = await self.req(1)
-        self.assertEqual(ans, 1)
+        create_task(echo(self.ask, reply=self.reply, cycles=REPEAT_FACTOR))
+        with profiler():
+            with self.subTest():
+                for i in range(REPEAT_FACTOR):
+                    ans = await self.req(i)
+                    self.assertEqual(ans, i)
