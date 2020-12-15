@@ -22,7 +22,10 @@ class _Chan(Chan[T], AsyncIterator[T]):
         return cast(int, self._q.maxlen)
 
     def __str__(self) -> str:
-        return f"chan[{', '.join(str(item) for item in self._q)}]"
+        if self:
+            return f"chan[{', '.join(str(item) for item in self._q)}]"
+        else:
+            return "chan|<closed>|"
 
     def __bool__(self) -> bool:
         return not self._onclose.is_set()
