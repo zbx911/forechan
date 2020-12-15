@@ -2,7 +2,7 @@ from asyncio.tasks import create_task
 from typing import TypeVar
 
 from .chan import chan
-from ._ops import close
+from ._ops import cascading_close
 from .select import select
 from .types import Chan, ChanClosed
 
@@ -12,11 +12,8 @@ T = TypeVar("T")
 async def fan_in(ch: Chan[T], *chs: Chan[T], cascade_close: bool = True) -> Chan[T]:
     out: Chan[T] = chan()
 
-    async def close_upstream() -> None:
-        await out._closed_notif()
-        await close(ch, *chs, close=cascade_close)
-
-    create_task(close_upstream())
+    if cascade_close:
+        await cascading_close((out,), dest=(ch, *chs))
 
     async def cont() -> None:
         async with out:

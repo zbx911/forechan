@@ -44,6 +44,7 @@ for _ in range(5):
       # do some work
 
   create_task(cont())
+
 # will wait for all work to be completed
 await wg.wait()
 ```
@@ -117,16 +118,13 @@ def producer() -> Chan[int]:
 
   create_task(cont())
   return ch
-
-# or call `await ch.close()` any time
-# up to you
 ```
 
 ## Common Patterns
 
 Most QOL (Quality of Life) functions that return a `Chan[T]` such as `select(*chs)` or `trans(xform, ch)` or `fan_in(*chs)` take a named param: `cascade_close`.
 
-if `cascade_close = True`, which is the default. Closing the returned channel will also close upstream channels.
+if `cascade_close = True`, which is the default. Closing the returned channel(s) will also close upstream channels.
 
 ### Fan In
 
@@ -169,6 +167,6 @@ ch2: Chan[str] = await trans(xform, ch=ch1)
 
 ## Architectural Patterns
 
-### RPC
+### Topics
 
-###
+### Simple RPC

@@ -3,7 +3,7 @@ from asyncio.tasks import create_task
 from itertools import chain
 from typing import Any, Set, Tuple
 
-from ._ops import close
+from ._ops import cascading_close
 from .chan import chan
 from .types import Chan, ChanClosed
 from .wait_group import wait_group
@@ -17,11 +17,9 @@ async def select(
     ready: Set[Chan[Any]] = set()
     ev = Event()
 
-    async def close_upstream() -> None:
-        await out._closed_notif()
-        await close(ch, *chs, close=cascade_close)
-
-    create_task(close_upstream())
+    if cascade_close:
+        await cascading_close((out,), dest=(ch, *chs))
+    await cascading_close((ch, *chs), dest=(out,))
 
     for c in chain((ch,), chs):
 
@@ -39,12 +37,6 @@ async def select(
                     break
 
         create_task(notif())
-
-    async def fin() -> None:
-        await wg.wait()
-        await out.close()
-
-    create_task(fin())
 
     async def cont() -> None:
         while out:
