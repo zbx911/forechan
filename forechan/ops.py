@@ -18,11 +18,12 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
     ait = gen() if isinstance(it, Iterable) else it
 
     async def cont() -> None:
-        async for item in ait:
-            try:
-                await ch.send(item)
-            except ChanClosed:
-                break
+        async with ch:
+            async for item in ait:
+                try:
+                    await ch.send(item)
+                except ChanClosed:
+                    break
 
     create_task(cont())
     return ch

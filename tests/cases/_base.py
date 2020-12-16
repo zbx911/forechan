@@ -168,5 +168,9 @@ class BaseCases:
             await (self.ch << 1)
             await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
 
+    class PerformanceProfilng(IsolatedAsyncioTestCase, HasChan):
+        async def test_1(self) -> None:
+            pass
+
 
 BASE_CASES = tuple(extract_testcases(BaseCases))

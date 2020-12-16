@@ -1,12 +1,12 @@
 from collections import deque
-from typing import Deque, Iterable, Iterator, MutableSequence, Sized, TypeVar, cast
+from typing import Deque, Generic, Iterator, MutableSequence, Sized, TypeVar, cast
 
 from .types import Buf, Closable
 
 T = TypeVar("T")
 
 
-class _BaseBuf(Sized, Closable, Iterable[T]):
+class _BaseBuf(Sized, Closable, Generic[T]):
     _q: MutableSequence[T]
 
     def __len__(self) -> int:

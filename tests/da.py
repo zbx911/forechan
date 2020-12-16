@@ -16,7 +16,7 @@ def profiler() -> Iterator[None]:
     try:
         yield None
     finally:
-        elapsed = monotonic() - p
+        elapsed = round(monotonic() - p, 3)
         log.info("%s", f"Time Elapsed - {elapsed}")
 
 
