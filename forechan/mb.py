@@ -1,10 +1,8 @@
-from asyncio.locks import Event
-from asyncio.tasks import create_task
 from itertools import count
-from typing import Awaitable, Callable, MutableMapping, Optional, Tuple, Type, TypeVar
+from typing import Awaitable, Callable, Optional, Tuple, Type, TypeVar
 
 from .chan import chan
-from .types import Chan
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -13,24 +11,20 @@ U = TypeVar("U")
 async def mb_from(
     ask: Chan[Tuple[int, T]], reply: Chan[Tuple[int, U]]
 ) -> Callable[[T], Awaitable[U]]:
-    ev = Event()
-    replies: MutableMapping[int, U] = {}
     it = count()
-
-    async def cont() -> None:
-        async for rid, ans in reply:
-            replies[rid] = ans
-            ev.set()
-
-    create_task(cont())
 
     async def req(qst: T) -> U:
         uid = next(it)
         await ask.send((uid, qst))
         while True:
-            await ev.wait()
-            if uid in replies:
-                return replies.pop(uid)
+            await reply._on_recvable()
+            if not reply:
+                raise ChanClosed()
+            elif reply.recvable():
+                rid, _ = reply.try_peek()
+                if rid == uid:
+                    _, item = reply.try_recv()
+                    return item
 
     return req
 

@@ -4,7 +4,7 @@ from .distribute import distribute
 from .fan_in import fan_in
 from .fan_out import fan_out
 from .mb import mb, mb_from
-from .ops import cascading_close
+from .ops import to_chan, with_closing
 from .pipe import pipe
 from .pubsub import sub
 from .select import select
