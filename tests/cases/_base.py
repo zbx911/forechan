@@ -5,7 +5,7 @@ from typing import Any, Awaitable, MutableSequence, Protocol
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.types import Chan, ChanClosed, ChanEmpty, ChanFull
-from ..consts import MODICUM_TIME, REPEAT_FACTOR, SMOL_TIME
+from ..consts import BIG_REP_FACTOR, MODICUM_TIME, SMOL_TIME, SMOL_REP_FACTOR
 from ..da import extract_testcases
 
 
@@ -111,24 +111,23 @@ class BaseCases:
             await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
-            nums = 10
 
             async def c1() -> None:
                 async with self.ch:
-                    for i in range(nums + 1):
+                    for i in range(SMOL_REP_FACTOR + 1):
                         await (self.ch << i)
 
             async def c2() -> None:
                 i = -1
                 async for i in self.ch:
                     pass
-                self.assertEqual(i, nums)
+                self.assertEqual(i, SMOL_REP_FACTOR)
 
             await wait_for(gather(c1(), c2()), timeout=MODICUM_TIME)
 
         async def test_4(self) -> None:
-            sends = islice(iter(lambda: self.ch << 1, None), REPEAT_FACTOR)
-            recvs = islice(iter(lambda: () << self.ch, None), REPEAT_FACTOR)
+            sends = islice(iter(lambda: self.ch << 1, None), BIG_REP_FACTOR)
+            recvs = islice(iter(lambda: () << self.ch, None), BIG_REP_FACTOR)
             cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
             shuffle(cos)
             await wait_for(gather(*cos), timeout=MODICUM_TIME)
