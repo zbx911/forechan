@@ -1,34 +1,24 @@
-from asyncio import gather
-from asyncio.tasks import create_task
-from typing import Sequence, TypeVar
+from asyncio.tasks import create_task, gather
+from typing import Iterable, Tuple, TypeVar
 
-from .ops import cascading_close
-from .types import Chan, ChanClosed
+from .ops import with_closing
+from .select import select
+from .types import Chan
 
 T = TypeVar("T")
 
 
 async def pipe(
-    src: Sequence[Chan[T]],
-    dest: Chan[T],
-    cascade_close: bool = True,
+    src: Iterable[Chan[T]], dest: Chan[T], cascade_close: bool = True
 ) -> None:
-    if cascade_close:
-        await gather(
-            cascading_close(src, dest=(dest,)), cascading_close((dest,), dest=src)
-        )
+    upstream: Chan[Tuple[Chan[T], T]] = await select(*src)
 
-    for ch in src:
+    async def cont() -> None:
+        async with with_closing(upstream, dest, close=cascade_close):
+            while dest and upstream:
+                await gather(dest._on_sendable(), upstream._on_recvable())
+                if dest.sendable() and upstream.recvable():
+                    _, item = upstream.try_recv()
+                    dest.try_send(item)
 
-        async def cont() -> None:
-            while True:
-                try:
-                    await gather(ch._on_recvable(), dest._on_sendable())
-                except ChanClosed:
-                    break
-                else:
-                    if ch.recvable() and dest.sendable():
-                        item = ch.try_recv()
-                        dest.try_send(item)
-
-        create_task(cont())
+    create_task(cont())
