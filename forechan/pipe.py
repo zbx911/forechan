@@ -3,7 +3,7 @@ from asyncio.tasks import create_task
 from typing import Sequence, TypeVar
 
 from .ops import cascading_close
-from .types import Chan
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 
@@ -21,7 +21,14 @@ async def pipe(
     for ch in src:
 
         async def cont() -> None:
-            async for item in ch:
-                await dest.send(item)
+            while True:
+                try:
+                    await gather(ch._on_recvable(), dest._on_sendable())
+                except ChanClosed:
+                    break
+                else:
+                    if ch._recvable() and dest._sendable():
+                        item = ch.try_recv()
+                        dest.try_send(item)
 
         create_task(cont())

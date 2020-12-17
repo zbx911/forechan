@@ -40,7 +40,7 @@ async def select(
                 await ev.wait()
                 ev.clear()
             try:
-                await out._sendable()
+                await out._on_sendable()
             except ChanClosed:
                 return
             else:
