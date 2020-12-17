@@ -7,7 +7,7 @@ from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
 from ...forechan.trans import trans
-from ..consts import BIG_REP_FACTOR, MODICUM_TIME
+from ..consts import MODICUM_REP_FACTOR, MODICUM_TIME
 from ..da import extract_testcases, mk_loader, polyclass_matrix
 from ._base import BASE_CASES, HasChan
 
@@ -42,8 +42,8 @@ class UpstreamSend(TransBaseSetup.SetupChan):
         self.assertEqual(len(self.ch), 0)
 
     async def test_3(self) -> None:
-        sends = islice(iter(lambda: self.p << 1, None), BIG_REP_FACTOR)
-        recvs = islice(iter(lambda: [] << self.ch, None), BIG_REP_FACTOR)
+        sends = islice(iter(lambda: self.p << 1, None), MODICUM_REP_FACTOR)
+        recvs = islice(iter(lambda: [] << self.ch, None), MODICUM_REP_FACTOR)
         cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
         shuffle(cos)
         await wait_for(gather(*cos), timeout=MODICUM_TIME)
