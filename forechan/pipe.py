@@ -15,9 +15,9 @@ async def pipe(
 
     async def cont() -> None:
         async with with_closing(upstream, dest, close=cascade_close):
-            while dest and upstream:
-                await gather(dest._on_sendable(), upstream._on_recvable())
-                if dest.sendable() and upstream.recvable():
+            while upstream and dest:
+                await gather(upstream._on_recvable(), dest._on_sendable())
+                if upstream.recvable() and dest.sendable():
                     _, item = upstream.try_recv()
                     dest.try_send(item)
 

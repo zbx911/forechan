@@ -12,7 +12,7 @@ async def sub(predicate: Callable[[T], bool], pub: Chan[T]) -> Chan[T]:
 
     async def cont() -> None:
         async with out:
-            while pub:
+            while pub and out:
                 await gather(pub._on_recvable(), out._on_sendable())
                 if pub.recvable() and out.sendable():
                     item = pub.try_peek()

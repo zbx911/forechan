@@ -30,23 +30,6 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
     return ch
 
 
-async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -> None:
-    wg = wait_group()
-    for ch in src:
-
-        async def cont() -> None:
-            with wg:
-                await ch._on_closed()
-
-        create_task(cont())
-
-    async def close() -> None:
-        await wg.wait()
-        await gather(*(ch.close() for ch in dest))
-
-    create_task(close())
-
-
 @asynccontextmanager
 async def with_closing(
     *closables: AsyncClosable, close: bool = True

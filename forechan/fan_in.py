@@ -16,9 +16,9 @@ async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
     async def cont() -> None:
         async with out:
             async with with_closing(upstream, close=cascade_close):
-                while out and upstream:
-                    await gather(out._on_sendable(), upstream._on_recvable())
-                    if out.sendable() and upstream.recvable():
+                while upstream and out:
+                    await gather(upstream._on_recvable(), out._on_sendable())
+                    if upstream.recvable() and out.sendable():
                         _, item = upstream.try_recv()
                         out.try_send(item)
 
