@@ -1,4 +1,4 @@
-from asyncio.locks import Condition
+from asyncio.locks import Event
 from asyncio.tasks import create_task
 from itertools import count
 from typing import Awaitable, Callable, MutableMapping, Optional, Tuple, Type, TypeVar
@@ -13,24 +13,24 @@ U = TypeVar("U")
 async def mb_from(
     ask: Chan[Tuple[int, T]], reply: Chan[Tuple[int, U]]
 ) -> Callable[[T], Awaitable[U]]:
-    cond = Condition()
+    ev = Event()
     replies: MutableMapping[int, U] = {}
     it = count()
 
     async def cont() -> None:
         async for rid, ans in reply:
             replies[rid] = ans
-            async with cond:
-                cond.notify_all()
+            ev.set()
 
     create_task(cont())
 
     async def req(qst: T) -> U:
         uid = next(it)
         await ask.send((uid, qst))
-        async with cond:
-            await cond.wait_for(lambda: uid in replies)
-            return replies.pop(uid)
+        while True:
+            await ev.wait()
+            if uid in replies:
+                return replies.pop(uid)
 
     return req
 
