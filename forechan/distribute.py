@@ -30,28 +30,26 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
                 except ChanClosed:
                     break
                 else:
-                    if ch not in ready:
-                        ready.append(ch)
+                    ev.set()
+                    ready.append(ch)
 
         create_task(poll())
 
     async def cont() -> None:
-        async for item in src:
-            sent = False
-            while True:
+        while True:
+            if not ready:
                 await ev.wait()
-                while ready:
-                    ch = ready.popleft()
-                    try:
-                        if ch._sendable():
-                            ch.try_send(item)
-                    except ChanClosed:
-                        pass
-                    else:
-                        sent = True
-                        break
                 ev.clear()
-                if sent:
-                    break
+            try:
+                await src._on_recvable()
+            except ChanClosed:
+                return
+            else:
+                while ready:
+                    c = ready.popleft()
+                    if c._recvable():
+                        item = src.try_recv()
+                        c.try_send((c, item))
+                        break
 
     create_task(cont())

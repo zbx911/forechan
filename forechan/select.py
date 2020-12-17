@@ -36,9 +36,12 @@ async def select(
 
     async def cont() -> None:
         while True:
-            await ev.wait()
-            ev.clear()
-            if not out:
+            if not ready:
+                await ev.wait()
+                ev.clear()
+            try:
+                await out._sendable()
+            except ChanClosed:
                 return
             else:
                 while ready:
