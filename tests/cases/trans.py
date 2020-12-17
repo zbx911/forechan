@@ -1,5 +1,5 @@
 from asyncio import gather, wait_for
-from asyncio.tasks import gather
+from asyncio.tasks import gather, sleep
 from itertools import islice
 from random import shuffle
 from typing import Any, AsyncIterator, Awaitable, MutableSequence
@@ -31,19 +31,23 @@ class UpstreamSend(TransBaseSetup.SetupChan):
         await (self.p << 1)
         await ([] << self.ch)
         await (self.p << 1)
+        await sleep(0)
+        self.assertEqual(len(self.ch), 1)
 
     async def test_2(self) -> None:
         fut = gather([] << self.ch, [] << self.ch)
         await (self.p << 1)
         await (self.p << 1)
         await fut
+        self.assertEqual(len(self.ch), 0)
 
     async def test_3(self) -> None:
-        sends = islice(iter(lambda: self.ch << 1, None), BIG_REP_FACTOR)
+        sends = islice(iter(lambda: self.p << 1, None), BIG_REP_FACTOR)
         recvs = islice(iter(lambda: [] << self.ch, None), BIG_REP_FACTOR)
         cos: MutableSequence[Awaitable[Any]] = [*sends, *recvs]
         shuffle(cos)
         await wait_for(gather(*cos), timeout=MODICUM_TIME)
+        self.assertEqual(len(self.p), 0)
         self.assertEqual(len(self.ch), 0)
 
 
