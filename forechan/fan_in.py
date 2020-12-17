@@ -8,10 +8,8 @@ from .types import Chan
 T = TypeVar("T")
 
 
-async def fan_in(ch: Chan[T], *cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
-    upstream: Chan[Tuple[Chan[T], T]] = await select(
-        ch, *cs, cascade_close=cascade_close
-    )
+async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
+    upstream: Chan[Tuple[Chan[T], T]] = await select(*cs, cascade_close=cascade_close)
     out: Chan[T] = chan()
 
     async def cont() -> None:

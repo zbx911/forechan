@@ -19,7 +19,7 @@ async def split(
 
     async def cont() -> None:
         async with with_closing(lhs, rhs):
-            async with cascade_close(ch, close=cascade_close):
+            async with with_closing(ch, close=cascade_close):
                 while ch and lhs and rhs:
                     await gather(
                         ch._on_recvable(), lhs._on_sendable(), rhs._on_sendable()
