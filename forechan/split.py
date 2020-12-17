@@ -3,7 +3,7 @@ from asyncio.tasks import create_task
 from typing import Callable, Tuple, TypeVar
 
 from .chan import chan
-from .ops import cascading_close
+from .ops import with_closing
 from .types import Chan, ChanClosed
 
 T = TypeVar("T")
@@ -17,28 +17,20 @@ async def split(
     lhs: Chan[T] = chan()
     rhs: Chan[T] = chan()
 
-    if cascade_close:
-        await cascading_close((lhs, rhs), dest=(ch,))
-    await gather(
-        cascading_close((ch,), dest=(lhs, rhs)),
-        cascading_close((lhs,), dest=(rhs,)),
-        cascading_close((rhs,), dest=(lhs,)),
-    )
-
     async def cont() -> None:
-        while True:
-            try:
-                await gather(ch._on_recvable(), lhs._on_sendable(), rhs._on_sendable())
-            except ChanClosed:
-                break
-            else:
-                if ch.recvable() and lhs.sendable() and rhs.sendable():
-                    item = ch.try_recv()
-                    det = predicate(item)
-                    if det:
-                        lhs.try_send(item)
-                    else:
-                        rhs.try_send(item)
+        async with with_closing(lhs, rhs):
+            async with cascade_close(ch, close=cascade_close):
+                while ch and lhs and rhs:
+                    await gather(
+                        ch._on_recvable(), lhs._on_sendable(), rhs._on_sendable()
+                    )
+                    if ch.recvable() and lhs.sendable() and rhs.sendable():
+                        item = ch.try_recv()
+                        det = predicate(item)
+                        if det:
+                            lhs.try_send(item)
+                        else:
+                            rhs.try_send(item)
 
     create_task(cont())
     return lhs, rhs
