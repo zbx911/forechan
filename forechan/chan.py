@@ -140,18 +140,23 @@ class _Chan(_BaseChan[T]):
                 with self._state_handler():
                     return self._b.recv()
 
-    async def _on_closed(self) -> None:
+    async def _on_closed(self) -> Chan[T]:
         await self._onclose.wait()
+        return self
 
-    async def _on_sendable(self) -> None:
+    async def _on_sendable(self) -> Chan[T]:
         await self._sendable_ev.wait()
         if not self:
             raise ChanClosed()
+        else:
+            return self
 
-    async def _on_recvable(self) -> None:
+    async def _on_recvable(self) -> Chan[T]:
         await self._recvable_ev.wait()
         if not self:
             raise ChanClosed()
+        else:
+            return self
 
 
 def chan(t: Optional[Type[T]] = None, buf: Optional[Buf[T]] = None) -> Chan[T]:

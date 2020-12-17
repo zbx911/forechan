@@ -79,7 +79,7 @@ class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol
         ...
 
     @abstractmethod
-    async def _on_closed(self) -> None:
+    async def _on_closed(self) -> Chan[T]:
         ...
 
     @abstractmethod
@@ -95,7 +95,7 @@ class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol
         ...
 
     @abstractmethod
-    async def _on_sendable(self) -> None:
+    async def _on_sendable(self) -> Chan[T]:
         ...
 
     @abstractmethod
@@ -107,7 +107,7 @@ class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol
         ...
 
     @abstractmethod
-    async def _on_recvable(self) -> None:
+    async def _on_recvable(self) -> Chan[T]:
         ...
 
 
