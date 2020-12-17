@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Deque, Generic, Iterator, MutableSequence, Sized, TypeVar, cast
+from typing import Deque, Generic, Iterator, MutableSequence, Sized, TypeVar
 
 from .types import Buf, Closable
 
@@ -28,14 +28,11 @@ class NormalBuf(_BaseBuf[T], Buf[T]):
     """
 
     def __init__(self, maxlen: int) -> None:
-        self._q: Deque[T] = deque(maxlen=max(1, maxlen))
-
-    @property
-    def maxlen(self) -> int:
-        return cast(int, self._q.maxlen)
+        self._q: Deque[T] = deque()
+        self._maxlen = maxlen
 
     def full(self) -> bool:
-        return len(self) >= self.maxlen
+        return len(self) >= self._maxlen
 
     def send(self, item: T) -> None:
         self._q.append(item)
@@ -52,6 +49,11 @@ class SlidingBuf(NormalBuf[T]):
     def full(self) -> bool:
         return False
 
+    def send(self, item: T) -> None:
+        if len(self) >= self._maxlen:
+            self._q.popleft()
+            self._q.append(item)
+
 
 class DroppingBuf(NormalBuf[T]):
     """
@@ -62,5 +64,5 @@ class DroppingBuf(NormalBuf[T]):
         return False
 
     def send(self, item: T) -> None:
-        if len(self) < self.maxlen:
+        if len(self) < self._maxlen:
             self._q.append(item)

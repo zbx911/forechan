@@ -29,6 +29,7 @@ async def select(
                 except ChanClosed:
                     break
                 else:
+                    ev.set()
                     ready.append(c)
 
         create_task(poll())
@@ -36,6 +37,7 @@ async def select(
     async def cont() -> None:
         while True:
             await ev.wait()
+            ev.clear()
             if not out:
                 return
             else:
@@ -44,7 +46,6 @@ async def select(
                     if c._recvable():
                         item = c.try_recv()
                         out.try_send((c, item))
-                        ev.clear()
                         break
 
     create_task(cont())

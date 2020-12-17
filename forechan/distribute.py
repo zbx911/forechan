@@ -19,7 +19,7 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
         )
 
     ev = Event()
-    ready: Deque[Chan[T]] = deque(maxlen=len(dest))
+    ready: Deque[Chan[T]] = deque()
 
     for ch in dest:
 
