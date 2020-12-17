@@ -3,7 +3,7 @@ from typing import AsyncIterator, Callable, TypeVar
 
 from .chan import chan
 from .ops import with_closing
-from .types import Chan, ChanClosed
+from .types import Chan
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -20,9 +20,12 @@ async def trans(
         async with out:
             async with with_closing(ch, close=cascade_close):
                 async for item in trans(ch):
-                    try:
-                        await out.send(item)
-                    except ChanClosed:
+                    while out:
+                        await out._on_sendable()
+                        if out.sendable():
+                            out.try_send(item)
+                            break
+                    if not out:
                         break
 
     create_task(cont())

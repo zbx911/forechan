@@ -1,10 +1,9 @@
 from asyncio.tasks import create_task, gather
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
+from typing import AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
 from .chan import chan
-from .types import AsyncClosable, Chan, ChanClosed
-from .wait_group import wait_group
+from .types import AsyncClosable, Chan
 
 T = TypeVar("T")
 
@@ -21,9 +20,12 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
     async def cont() -> None:
         async with ch:
             async for item in ait:
-                try:
-                    await ch.send(item)
-                except ChanClosed:
+                while ch:
+                    await ch._on_sendable()
+                    if ch.sendable():
+                        ch.try_send(item)
+                        break
+                if not ch:
                     break
 
     create_task(cont())
