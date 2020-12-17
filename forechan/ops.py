@@ -48,8 +48,11 @@ async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -
 
 
 @asynccontextmanager
-async def with_closing(*closables: AsyncClosable) -> AsyncIterator[None]:
+async def with_closing(
+    *closables: AsyncClosable, close: bool = True
+) -> AsyncIterator[None]:
     try:
         yield None
     finally:
-        await gather(*(c.close() for c in closables))
+        if close:
+            await gather(*(c.close() for c in closables))
