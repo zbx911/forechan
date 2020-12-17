@@ -8,21 +8,21 @@ from .types import Chan
 
 
 async def select(
-    ch: Chan[Any], *chs: Chan[Any], cascade_close: bool = True
+    ch: Chan[Any], *cs: Chan[Any], cascade_close: bool = True
 ) -> Chan[Tuple[Chan[Any], Any]]:
     out: Chan[Any] = chan()
-    cs: MutableSequence[Chan[Any]] = [ch, *chs]
+    channels: MutableSequence[Chan[Any]] = [ch, *cs]
 
     async def cont() -> None:
         async with out:
-            async with with_closing(*cs, close=cascade_close):
-                while out and cs:
+            async with with_closing(*channels, close=cascade_close):
+                while out and channels:
                     _, (ready, _) = await gather(
                         out._on_sendable(),
-                        race(*(c._on_recvable() for c in cs)),
+                        race(*(c._on_recvable() for c in channels)),
                     )
                     if not ready:
-                        cs[:] = [c for c in cs if c]
+                        channels[:] = [c for c in channels if c]
                     elif out.sendable() and ready.recvable():
                         out.try_send(ready.try_recv())
 

@@ -15,6 +15,7 @@ class _WaitGroup(WaitGroup):
 
     def __enter__(self) -> None:
         self._counter += 1
+        self._event.clear()
 
     def __exit__(self, *_: Any) -> None:
         self._counter -= 1
