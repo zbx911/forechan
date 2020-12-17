@@ -106,14 +106,14 @@ class _Chan(_BaseChan[T]):
                 self._b.send(item)
 
     async def send(self, item: T) -> None:
-        while True:
-            if not self:
-                raise ChanClosed()
-            elif not self.sendable():
+        while self:
+            if not self.sendable():
                 await self._sendable_ev.wait()
             else:
                 with self._state_handler():
                     return self._b.send(item)
+        else:
+            raise ChanClosed()
 
     def try_recv(self) -> T:
         if not self:
@@ -125,14 +125,14 @@ class _Chan(_BaseChan[T]):
                 return self._b.recv()
 
     async def recv(self) -> T:
-        while True:
-            if not self:
-                raise ChanClosed()
-            elif not self.recvable():
+        while self:
+            if not self.recvable():
                 await self._recvable_ev.wait()
             else:
                 with self._state_handler():
                     return self._b.recv()
+        else:
+            raise ChanClosed()
 
     async def _on_closed(self) -> Chan[T]:
         await self._onclose.wait()

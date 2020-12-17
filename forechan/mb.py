@@ -16,15 +16,15 @@ async def mb_from(
     async def req(qst: T) -> U:
         uid = next(it)
         await ask.send((uid, qst))
-        while True:
+        while reply:
             await reply._on_recvable()
-            if not reply:
-                raise ChanClosed()
-            elif reply.recvable():
+            if reply.recvable():
                 rid, _ = reply.try_peek()
                 if rid == uid:
                     _, item = reply.try_recv()
                     return item
+        else:
+            raise ChanClosed()
 
     return req
 

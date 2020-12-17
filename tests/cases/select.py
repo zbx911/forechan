@@ -30,9 +30,9 @@ class SelectBaseSetup:
 
 class UpstreamSend(SelectBaseSetup.SetupChan):
     async def test_1(self) -> None:
-        await (self.u2 << 1)
-        await (self.u1 << 2)
+        await (self.u1 << 1)
         r1 = await ([] << self.ch)
+        await (self.u2 << 2)
         r2 = await ([] << self.ch)
         self.assertEqual(r1, 1)
         self.assertEqual(r2, 2)
