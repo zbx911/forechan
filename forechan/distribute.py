@@ -1,55 +1,26 @@
-from asyncio.locks import Event
 from asyncio.tasks import create_task, gather
-from collections import deque
-from typing import Deque, TypeVar
+from typing import MutableSequence, TypeVar
 
-from .ops import cascading_close
-from .types import Chan, ChanClosed
+from .ops import with_closing
+from .types import Chan
+from ._da import race
 
 T = TypeVar("T")
 
 
 async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -> None:
-    if not dest:
-        raise ValueError()
-
-    if cascade_close:
-        await gather(
-            cascading_close((src,), dest=dest), cascading_close(dest, dest=(src,))
-        )
-
-    ev = Event()
-    ready: Deque[Chan[T]] = deque()
-
-    for ch in dest:
-
-        async def poll() -> None:
-            while True:
-                try:
-                    await ch._on_sendable()
-                except ChanClosed:
-                    break
-                else:
-                    ev.set()
-                    ready.append(ch)
-
-        create_task(poll())
+    channels: MutableSequence[Chan[T]] = [*dest]
 
     async def cont() -> None:
-        while True:
-            if not ready:
-                await ev.wait()
-                ev.clear()
-            try:
-                await src._on_recvable()
-            except ChanClosed:
-                return
-            else:
-                while ready:
-                    c = ready.popleft()
-                    if c.recvable():
-                        item = src.try_recv()
-                        c.try_send(item)
-                        break
+        async with with_closing(src, *dest, close=cascade_close):
+            while src and channels:
+                _, (ready, _) = await gather(
+                    src._on_recvable(),
+                    race(*(c._on_sendable() for c in channels)),
+                )
+                if not ready:
+                    channels[:] = [c for c in channels if c]
+                elif src.recvable() and ready.sendable():
+                    ready.try_send(src.try_recv())
 
     create_task(cont())

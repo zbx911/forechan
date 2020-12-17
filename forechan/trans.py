@@ -1,8 +1,8 @@
 from asyncio.tasks import create_task
 from typing import AsyncIterator, Callable, TypeVar
 
-from .ops import cascading_close
 from .chan import chan
+from .ops import with_closing
 from .types import Chan, ChanClosed
 
 T = TypeVar("T")
@@ -16,16 +16,14 @@ async def trans(
 ) -> Chan[U]:
     out: Chan[U] = chan()
 
-    if cascade_close:
-        await cascading_close((out,), dest=(ch,))
-
     async def cont() -> None:
         async with out:
-            async for item in trans(ch):
-                try:
-                    await out.send(item)
-                except ChanClosed:
-                    break
+            async with with_closing(ch, close=cascade_close):
+                async for item in trans(ch):
+                    try:
+                        await out.send(item)
+                    except ChanClosed:
+                        break
 
     create_task(cont())
     return out

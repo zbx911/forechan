@@ -15,7 +15,7 @@ async def select(
 
     async def cont() -> None:
         async with out:
-            async with with_closing(*channels, close=cascade_close):
+            async with with_closing(ch, *cs, close=cascade_close):
                 while out and channels:
                     _, (ready, _) = await gather(
                         out._on_sendable(),

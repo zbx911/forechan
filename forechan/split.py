@@ -4,7 +4,7 @@ from typing import Callable, Tuple, TypeVar
 
 from .chan import chan
 from .ops import with_closing
-from .types import Chan, ChanClosed
+from .types import Chan
 
 T = TypeVar("T")
 
