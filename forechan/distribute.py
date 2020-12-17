@@ -47,7 +47,7 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
             else:
                 while ready:
                     c = ready.popleft()
-                    if c._recvable():
+                    if c.recvable():
                         item = src.try_recv()
                         c.try_send(item)
                         break

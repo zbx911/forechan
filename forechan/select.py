@@ -1,8 +1,6 @@
-from asyncio.locks import Event
-from asyncio.tasks import create_task
-from collections import deque
+from asyncio.tasks import create_task, gather, wait, FIRST_COMPLETED
 from itertools import chain
-from typing import Any, Deque, Tuple
+from typing import Any, MutableSequence, Tuple
 
 from .chan import chan
 from .ops import cascading_close
@@ -13,43 +11,27 @@ async def select(
     ch: Chan[Any], *chs: Chan[Any], cascade_close: bool = True
 ) -> Chan[Tuple[Chan[Any], Any]]:
     out: Chan[Any] = chan()
-    ev = Event()
-    ready: Deque[Chan[Any]] = deque()
 
     if cascade_close:
         await cascading_close((out,), dest=(ch, *chs))
     await cascading_close((ch, *chs), dest=(out,))
 
-    for c in chain((ch,), chs):
-
-        async def poll() -> None:
-            while True:
-                try:
-                    await c._on_recvable()
-                except ChanClosed:
-                    break
-                else:
-                    ev.set()
-                    ready.append(c)
-
-        create_task(poll())
+    cs: MutableSequence[Chan[Any]] = [ch, *chs]
 
     async def cont() -> None:
-        while True:
-            if not ready:
-                await ev.wait()
-                ev.clear()
+        while out:
             try:
-                await out._on_sendable()
+                _, (done, pending) = await gather(
+                    out._on_sendable(),
+                    wait((c._on_recvable() for c in cs), return_when=FIRST_COMPLETED),
+                )
             except ChanClosed:
-                return
+                cs[:] = [c for c in cs if c]
             else:
-                while ready:
-                    c = ready.popleft()
-                    if c._recvable():
-                        item = c.try_recv()
-                        out.try_send((c, item))
-                        break
+                for fut in done:
+                    ch = fut.result()
+                    if ch.sendable():
+                            ch.try_send()
 
     create_task(cont())
     return out

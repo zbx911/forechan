@@ -30,7 +30,7 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
                 else:
                     out[:] = [c for c in out if c]
             else:
-                if ch._recvable() and all(c._sendable() for c in out):
+                if ch.recvable() and all(c.sendable() for c in out):
                     item = ch.try_recv()
                     for c in out:
                         c.try_send(item)

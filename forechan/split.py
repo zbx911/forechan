@@ -32,7 +32,7 @@ async def split(
             except ChanClosed:
                 break
             else:
-                if ch._recvable() and lhs._sendable() and rhs._sendable():
+                if ch.recvable() and lhs.sendable() and rhs.sendable():
                     item = ch.try_recv()
                     det = predicate(item)
                     if det:

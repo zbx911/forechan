@@ -27,7 +27,7 @@ async def pipe(
                 except ChanClosed:
                     break
                 else:
-                    if ch._recvable() and dest._sendable():
+                    if ch.recvable() and dest.sendable():
                         item = ch.try_recv()
                         dest.try_send(item)
 

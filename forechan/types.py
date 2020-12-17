@@ -28,6 +28,12 @@ class ChanFull(Exception):
     pass
 
 
+class Boolable(Protocol):
+    @abstractmethod
+    def __bool__(self) -> bool:
+        ...
+
+
 class Closable(Protocol):
     @abstractmethod
     def close(self) -> None:
@@ -41,7 +47,9 @@ class AsyncClosable(Protocol):
 
 
 @runtime_checkable
-class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]):
+class Chan(
+    Sized, Boolable, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]
+):
     @abstractmethod
     def __bool__(self) -> bool:
         ...
@@ -71,11 +79,11 @@ class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol
         ...
 
     @abstractmethod
-    def _sendable(self) -> bool:
+    def sendable(self) -> bool:
         ...
 
     @abstractmethod
-    def _recvable(self) -> bool:
+    def recvable(self) -> bool:
         ...
 
     @abstractmethod
