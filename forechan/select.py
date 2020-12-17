@@ -2,7 +2,7 @@ from asyncio.locks import Event
 from asyncio.tasks import create_task
 from collections import deque
 from itertools import chain
-from typing import Any, Deque, Set, Tuple
+from typing import Any, Deque, Tuple
 
 from .chan import chan
 from .ops import cascading_close
@@ -15,7 +15,6 @@ async def select(
     out: Chan[Any] = chan()
     ev = Event()
     ready: Deque[Chan[Any]] = deque()
-    ready_set: Set[Chan[Any]] = set()
 
     if cascade_close:
         await cascading_close((out,), dest=(ch, *chs))
@@ -30,25 +29,21 @@ async def select(
                 except ChanClosed:
                     break
                 else:
-                    if c not in ready_set:
-                        ready_set.add(c)
-                        ready.append(c)
+                    ready.append(c)
 
         create_task(poll())
 
     async def cont() -> None:
-        while out:
+        while True:
             await ev.wait()
-            while ready:
-                c = ready.pop()
-                ready_set.remove(c)
-                if c._recvable():
-                    item = c.try_recv()
-                    try:
-                        await out.send((c, item))
-                    except ChanClosed:
-                        pass
-                    else:
+            if not out:
+                return
+            else:
+                while ready:
+                    c = ready.popleft()
+                    if c._recvable():
+                        item = c.try_recv()
+                        out.try_send((c, item))
                         ev.clear()
                         break
 
