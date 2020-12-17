@@ -145,10 +145,10 @@ class BaseCases:
 
         async def test_3(self) -> None:
             await self.ch.close()
-            with self.assertRaises(ChanClosed):
-                await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
-            with self.assertRaises(ChanClosed):
-                await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
+            ch1 = await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
+            ch2 = await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
+            self.assertFalse(ch1)
+            self.assertFalse(ch2)
 
     class SendableNotif(IsolatedAsyncioTestCase, HasChan):
         async def test_1(self) -> None:
