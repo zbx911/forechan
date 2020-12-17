@@ -1,16 +1,16 @@
 from asyncio import gather
 from asyncio.tasks import create_task
-from typing import Awaitable, Callable, Tuple, TypeVar
+from typing import Callable, Tuple, TypeVar
 
-from .ops import cascading_close
 from .chan import chan
-from .types import Chan
+from .ops import cascading_close
+from .types import Chan, ChanClosed
 
 T = TypeVar("T")
 
 
 async def split(
-    predicate: Callable[[T], Awaitable[bool]],
+    predicate: Callable[[T], bool],
     ch: Chan[T],
     cascade_close: bool = True,
 ) -> Tuple[Chan[T], Chan[T]]:
@@ -26,12 +26,19 @@ async def split(
     )
 
     async def cont() -> None:
-        async for item in ch:
-            det = await predicate(item)
-            if det:
-                await lhs.send(item)
+        while True:
+            try:
+                await gather(ch._on_recvable(), lhs._on_sendable(), rhs._on_sendable())
+            except ChanClosed:
+                break
             else:
-                await rhs.send(item)
+                if ch._recvable() and lhs._sendable() and rhs._sendable():
+                    item = ch.try_recv()
+                    det = predicate(item)
+                    if det:
+                        lhs.try_send(item)
+                    else:
+                        rhs.try_send(item)
 
     create_task(cont())
     return lhs, rhs
