@@ -6,6 +6,6 @@ T = TypeVar("T")
 
 
 async def race(*aws: Awaitable[T]) -> Tuple[T, Set[Future[T]]]:
-    futs = tuple(create_task(aw) for aw in aws)
+    futs = (create_task(aw) for aw in aws)
     done, pending = await wait(futs, return_when=FIRST_COMPLETED)
     return done.pop().result(), pending

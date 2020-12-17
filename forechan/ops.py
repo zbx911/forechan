@@ -1,8 +1,9 @@
 from asyncio.tasks import create_task, gather
+from contextlib import asynccontextmanager
 from typing import Any, AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
 from .chan import chan
-from .types import Chan, ChanClosed
+from .types import AsyncClosable, Chan, ChanClosed
 from .wait_group import wait_group
 
 T = TypeVar("T")
@@ -44,3 +45,11 @@ async def cascading_close(src: Iterable[Chan[Any]], dest: Iterable[Chan[Any]]) -
         await gather(*(ch.close() for ch in dest))
 
     create_task(close())
+
+
+@asynccontextmanager
+async def with_closing(*closables: AsyncClosable) -> AsyncIterator[None]:
+    try:
+        yield None
+    finally:
+        await gather(*(c.close() for c in closables))

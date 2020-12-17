@@ -1,37 +1,32 @@
-from asyncio.tasks import create_task, gather, wait, FIRST_COMPLETED
-from itertools import chain
+from asyncio.tasks import create_task, gather
 from typing import Any, MutableSequence, Tuple
 
+from ._da import race
 from .chan import chan
-from .ops import cascading_close
+from .ops import with_closing
 from .types import Chan, ChanClosed
 
 
-async def select(
-    ch: Chan[Any], *chs: Chan[Any], cascade_close: bool = True
-) -> Chan[Tuple[Chan[Any], Any]]:
+async def select(ch: Chan[Any], *chs: Chan[Any]) -> Chan[Tuple[Chan[Any], Any]]:
     out: Chan[Any] = chan()
-
-    if cascade_close:
-        await cascading_close((out,), dest=(ch, *chs))
-    await cascading_close((ch, *chs), dest=(out,))
-
     cs: MutableSequence[Chan[Any]] = [ch, *chs]
 
     async def cont() -> None:
-        while out:
-            try:
-                _, (done, pending) = await gather(
-                    out._on_sendable(),
-                    wait((c._on_recvable() for c in cs), return_when=FIRST_COMPLETED),
-                )
-            except ChanClosed:
-                cs[:] = [c for c in cs if c]
-            else:
-                for fut in done:
-                    ch = fut.result()
-                    if ch.sendable():
-                            ch.try_send()
+        async with out:
+            async with with_closing(*cs):
+                while cs:
+                    try:
+                        _, (ready, _) = await gather(
+                            out._on_sendable(),
+                            race(*(c._on_recvable() for c in cs)),
+                        )
+                    except ChanClosed:
+                        break
+                    else:
+                        if not ready:
+                            cs[:] = [c for c in cs if c]
+                        elif out.sendable() and ready.recvable():
+                            out.try_send(ready.try_recv())
 
     create_task(cont())
     return out
