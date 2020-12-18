@@ -17,15 +17,15 @@ T = TypeVar("T")
 
 
 class ChanClosed(Exception):
-    pass
+    ...
 
 
 class ChanEmpty(Exception):
-    pass
+    ...
 
 
 class ChanFull(Exception):
-    pass
+    ...
 
 
 class Boolable(Protocol):
