@@ -25,7 +25,7 @@ class _BaseChan(Chan[T], AsyncIterator[T]):
         return self
 
     async def __aexit__(self, *_: Any) -> None:
-        await self.close()
+        await self.aclose()
 
     def __aiter__(self) -> AsyncIterator[T]:
         return self
@@ -65,7 +65,7 @@ class _Chan(_BaseChan[T]):
     def __bool__(self) -> bool:
         return not self._onclose.is_set()
 
-    async def close(self) -> None:
+    async def aclose(self) -> None:
         await sleep(0)
         self._b.clear()
         self._onclose.set()

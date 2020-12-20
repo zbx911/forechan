@@ -38,7 +38,7 @@ class Clearable(Protocol):
 
 class AsyncClosable(Protocol):
     @abstractmethod
-    async def close(self) -> None:
+    async def aclose(self) -> None:
         """
         idempotent
         """

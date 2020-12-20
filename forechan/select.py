@@ -4,7 +4,7 @@ from typing import Any, MutableSequence, Tuple
 from ._da import race
 from .chan import chan
 from .go import GO, go
-from .ops import with_closing
+from .ops import with_aclosing
 from .types import Chan
 
 
@@ -26,7 +26,7 @@ async def select(
 
     async def cont() -> None:
         async with out:
-            async with with_closing(*cs, close=cascade_close):
+            async with with_aclosing(*cs, close=cascade_close):
                 while out and channels:
                     (ready, _), _ = await gather(
                         race(*(ch._on_recvable() for ch in channels)),

@@ -38,7 +38,7 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]], go: GO = go) -> Chan
 
 
 @asynccontextmanager
-async def with_closing(
+async def with_aclosing(
     *closables: AsyncClosable, close: bool = True
 ) -> AsyncIterator[None]:
     """
@@ -51,4 +51,4 @@ async def with_closing(
         yield None
     finally:
         if close:
-            await gather(*(c.close() for c in closables))
+            await gather(*(c.aclose() for c in closables))

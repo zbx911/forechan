@@ -26,7 +26,7 @@ class BaseCases:
             self.assertTrue(self.ch)
 
         async def test_2(self) -> None:
-            await self.ch.close()
+            await self.ch.aclose()
             self.assertFalse(self.ch)
 
         async def test_3(self) -> None:
@@ -40,7 +40,7 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await (self.ch << 1)
 
-            await self.ch.close()
+            await self.ch.aclose()
             await gather(c1(), c2())
 
         async def test_4(self) -> None:
@@ -52,7 +52,7 @@ class BaseCases:
                 with self.assertRaises(ChanClosed):
                     await ([] << self.ch)
 
-            await self.ch.close()
+            await self.ch.aclose()
             await gather(c1(), c2())
 
     class SendRecvSync(IsolatedAsyncioTestCase, HasChan[int]):
@@ -78,13 +78,13 @@ class BaseCases:
 
     class SendToClosed(IsolatedAsyncioTestCase, HasChan[int]):
         async def test_1(self) -> None:
-            await self.ch.close()
+            await self.ch.aclose()
             with self.assertRaises(ChanClosed):
                 await (self.ch << 1)
 
     class RecvFromClosed(IsolatedAsyncioTestCase, HasChan[int]):
         async def test_1(self) -> None:
-            await self.ch.close()
+            await self.ch.aclose()
             with self.assertRaises(ChanClosed):
                 await ([] << self.ch)
 
@@ -141,11 +141,11 @@ class BaseCases:
                 await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
 
         async def test_2(self) -> None:
-            await self.ch.close()
+            await self.ch.aclose()
             await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
 
         async def test_3(self) -> None:
-            await self.ch.close()
+            await self.ch.aclose()
             ch1 = await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
             ch2 = await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
             self.assertFalse(ch1)

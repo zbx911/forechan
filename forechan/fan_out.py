@@ -5,7 +5,7 @@ from typing import Awaitable, MutableSequence, Sequence, TypeVar
 from ._da import race
 from .chan import chan
 from .go import GO, go
-from .ops import with_closing
+from .ops import with_aclosing
 from .types import Chan
 
 T = TypeVar("T")
@@ -41,8 +41,8 @@ async def fan_out(
     out: Sequence[Chan[T]] = tuple(cs)
 
     async def cont() -> None:
-        async with with_closing(*out):
-            async with with_closing(ch, close=cascade_close):
+        async with with_aclosing(*out):
+            async with with_aclosing(ch, close=cascade_close):
                 while ch and cs:
                     _, (ready, pending) = await gather(
                         ch._on_recvable(),

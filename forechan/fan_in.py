@@ -4,7 +4,7 @@ from typing import MutableSequence, TypeVar
 from ._da import race
 from .chan import chan
 from .go import GO, go
-from .ops import with_closing
+from .ops import with_aclosing
 from .types import Chan
 
 T = TypeVar("T")
@@ -28,7 +28,7 @@ async def fan_in(*cs: Chan[T], cascade_close: bool = True, go: GO = go) -> Chan[
 
     async def cont() -> None:
         async with out:
-            async with with_closing(*cs, close=cascade_close):
+            async with with_aclosing(*cs, close=cascade_close):
                 while out and channels:
                     (ready, _), _ = await gather(
                         race(*(ch._on_recvable() for ch in channels)),
