@@ -15,14 +15,14 @@ async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
     await go(cont())
 
 
-class SelectSetup:
+class SelectorSetup:
     class SetupChan(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
             self.u1, self.u2 = chan(int), chan(int)
             self.se = await selector()
 
 
-class UpstreamSend(SelectSetup.SetupChan):
+class UpstreamSend(SelectorSetup.SetupChan):
     async def test_1(self) -> None:
         await (self.u1 << 1)
         await (self.u2 << 2)

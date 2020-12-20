@@ -36,11 +36,12 @@ class _Selector(Selector):
     async def __aexit__(self, *_: Any) -> None:
         async def cont() -> None:
             async with with_aclosing(*self._sc, *self._rc, close=self._cc):
-                while not self._closed and self._sc and self._rc:
+                while not self._closed and (self._sc or self._rc):
                     ch, _ = await race(
                         *(ch._on_sendable() for ch in self._sc),
                         *(ch._on_recvable() for ch in self._rc)
                     )
+
                     if not ch:
                         self._sc = {c: f for c, f in self._sc.items()}
                         self._rc = {c: f for c, f in self._rc.items()}
