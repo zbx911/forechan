@@ -15,7 +15,9 @@ async def pure(item: T) -> T:
 
 
 async def race(aw: Awaitable[T], *aws: Awaitable[T]) -> Tuple[T, Sequence[Future[T]]]:
-    futs = gather((go(a) if iscoroutine(a) else pure(a) for a in chain((aw,), aws)))
+    futs = await gather(
+        *(go(a) if iscoroutine(a) else pure(a) for a in chain((aw,), aws))
+    )
     done, pending = await wait(futs, return_when=FIRST_COMPLETED)
     ret = done.pop().result()
     return ret, tuple(chain(done, pending))
