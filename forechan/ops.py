@@ -2,7 +2,7 @@ from asyncio.tasks import gather
 from contextlib import asynccontextmanager
 from typing import AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
-from ._sched import go
+from .go import go
 from .chan import chan
 from .types import AsyncClosable, Chan
 

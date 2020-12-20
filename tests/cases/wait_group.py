@@ -2,7 +2,7 @@ from asyncio import TimeoutError, wait_for
 from asyncio.tasks import gather
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan._sched import go
+from ...forechan.go import go
 from ...forechan.wait_group import wait_group
 from ..consts import SMOL_TIME
 

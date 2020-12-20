@@ -40,7 +40,7 @@ def wait_group() -> WaitGroup:
         with wg:
         # do some work
 
-    create_task(cont())
+    go(cont())
 
     # will wait for all work to be completed
     await wg.wait()

@@ -5,7 +5,7 @@ from random import shuffle
 from typing import Any, Awaitable, MutableSequence, Tuple
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan._sched import go
+from ...forechan.go import go
 from ...forechan.chan import chan
 from ...forechan.select import select
 from ...forechan.types import Chan

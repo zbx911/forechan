@@ -1,7 +1,7 @@
 from asyncio.tasks import gather
 from typing import Callable, TypeVar
 
-from ._sched import go
+from .go import go
 from .chan import chan
 from .types import Chan
 

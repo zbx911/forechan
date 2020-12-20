@@ -2,7 +2,7 @@ from itertools import count
 from typing import Tuple
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan._sched import go
+from ...forechan.go import go
 from ...forechan.mailbox import mb
 from ...forechan.types import Chan
 from ..consts import BIG_REP_FACTOR

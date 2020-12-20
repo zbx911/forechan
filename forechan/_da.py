@@ -5,7 +5,7 @@ from asyncio.tasks import FIRST_COMPLETED, wait
 from itertools import chain
 from typing import Awaitable, Sequence, Tuple, TypeVar
 
-from ._sched import go
+from .go import go
 
 T = TypeVar("T")
 

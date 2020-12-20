@@ -86,12 +86,10 @@ go fn()
 When `GOMAXPROCS=1`
 
 ```python
-from asyncio import create_task
-
 async def fn() -> None:
   # do things here
 
-create_task(fn())
+go(fn())
 ```
 
 ## Common Concurrency Patterns
@@ -117,7 +115,7 @@ def producer() -> Chan[int]:
         # send result `item` to downstream `ch`
         await (ch << item)
 
-  create_task(cont())
+  go(cont())
   return ch
 ```
 

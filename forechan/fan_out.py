@@ -3,7 +3,7 @@ from itertools import islice
 from typing import Awaitable, MutableSequence, Sequence, TypeVar
 
 from ._da import race
-from ._sched import go
+from .go import go
 from .chan import chan
 from .ops import with_closing
 from .types import Chan

@@ -2,7 +2,7 @@ from asyncio.tasks import gather
 from typing import Any, MutableSequence, Tuple
 
 from ._da import race
-from ._sched import go
+from .go import go
 from .chan import chan
 from .ops import with_closing
 from .types import Chan
