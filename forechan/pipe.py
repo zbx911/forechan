@@ -12,7 +12,15 @@ async def pipe(
     src: Iterable[Chan[T]], dest: Chan[T], cascade_close: bool = True
 ) -> None:
     """
-    for each chan in `src`
+    # each item in `*src` goes to `dest`
+
+    `*src`
+    ------>|
+    ------>|
+    ------>|---> `dest`
+    ------>|
+    ------>|
+    ...
     """
 
     channels: MutableSequence[Chan[T]] = [*src]

@@ -9,6 +9,18 @@ T = TypeVar("T")
 
 
 async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -> None:
+    """
+    # each item from `src` goes to first available chan in `*dest`
+
+           `*dest`
+           |------>
+     `src` |------>
+    ------>|------>
+           |------>
+           |------>
+           ...
+    """
+
     cs: MutableSequence[Chan[T]] = [*dest]
 
     async def cont() -> None:

@@ -40,11 +40,9 @@ async for item in ch:
 ```python
 async for ch, item in await select(ch1, ch2, ch3, ...):
   if ch == ch1:
-    # when receiving from `ch1`
-    # do something with `item`
+    ...
   elif ch == ch2:
-    # when receiving from `ch2`
-    # do something with `item`
+    ...
   elif ch == ch3:
     ...
 ```

@@ -11,6 +11,8 @@ T = TypeVar("T")
 
 async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
     """
+    # each item in `*cs` goes to `out`
+
     `*cs`
     ------>|
     ------>|

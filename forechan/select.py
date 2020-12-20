@@ -10,6 +10,16 @@ from .types import Chan
 async def select(
     *cs: Chan[Any], cascade_close: bool = True
 ) -> Chan[Tuple[Chan[Any], Any]]:
+    """
+    async for ch, item in await select(ch1, ch2, ch3, ...):
+    if ch == ch1:
+        ...
+    elif ch == ch2:
+        ...
+    elif ch == ch3:
+        ...
+    """
+
     out: Chan[Any] = chan()
     channels: MutableSequence[Chan[Any]] = [*cs]
 

@@ -32,4 +32,18 @@ class _WaitGroup(WaitGroup):
 
 
 def wait_group() -> WaitGroup:
+    """
+    wg = wait_group()
+
+    for _ in range(5):
+    async def cont() -> None:
+        with wg:
+        # do some work
+
+    create_task(cont())
+
+    # will wait for all work to be completed
+    await wg.wait()
+    """
+
     return _WaitGroup()

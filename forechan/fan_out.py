@@ -20,6 +20,8 @@ async def _send(fut: Awaitable[Chan[T]], item: T) -> None:
 
 async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[Chan[T]]:
     """
+    # each item from `ch` goes to each chan in `out`
+
            `out`
            |------>
      `ch`  |------>
@@ -27,7 +29,6 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
            |------>
            |------>
            ...
-    # each item from `ch` goes to each chan in `out`
     """
 
     if n < 1:
