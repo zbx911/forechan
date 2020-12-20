@@ -45,4 +45,4 @@ class UpstreamSend(SelectorSetup.SetupChan):
                 await self.wg.wait()
                 se.close()
 
-            await go(c0)
+            await go(c0())
