@@ -89,7 +89,7 @@ When `GOMAXPROCS=1`
 async def fn() -> None:
   # do things here
 
-go(fn())
+await go(fn())
 ```
 
 ## Common Concurrency Patterns
@@ -115,7 +115,7 @@ def producer() -> Chan[int]:
         # send result `item` to downstream `ch`
         await (ch << item)
 
-  go(cont())
+  await go(cont())
   return ch
 ```
 
