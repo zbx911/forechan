@@ -1,8 +1,26 @@
+from abc import abstractmethod
 from asyncio import sleep
 from asyncio.locks import Event
-from typing import Any
+from typing import Any, ContextManager, Protocol, Sized, runtime_checkable
 
-from .types import WaitGroup
+
+@runtime_checkable
+class WaitGroup(Sized, ContextManager[None], Protocol):
+    """
+    wg = wait_group()
+
+    # this is a `wg` block
+    with wg:
+        ...
+    """
+
+    @abstractmethod
+    async def wait(self) -> None:
+        """
+        # wait for all `wg` blocks to exit
+
+        await wg.wait()
+        """
 
 
 class _WaitGroup(WaitGroup):

@@ -5,7 +5,6 @@ from typing import (
     Any,
     AsyncContextManager,
     AsyncIterable,
-    ContextManager,
     Iterable,
     Protocol,
     Sized,
@@ -53,7 +52,9 @@ class AsyncClosable(Protocol):
 
 
 @runtime_checkable
-class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]):
+class Chan(
+    Sized, AsyncClosable, AsyncContextManager["Chan[T]"], AsyncIterable[T], Protocol[T]
+):
     """
     CSP channels
     <NOT thread safe>!
@@ -192,22 +193,3 @@ class Buf(Sized, Clearable, Iterable[T], Protocol[T]):
     @abstractmethod
     def pop(self) -> T:
         ...
-
-
-@runtime_checkable
-class WaitGroup(Sized, ContextManager[None], Protocol):
-    """
-    wg = wait_group()
-
-    # this is a `wg` block
-    with wg:
-        ...
-    """
-
-    @abstractmethod
-    async def wait(self) -> None:
-        """
-        # wait for all `wg` blocks to exit
-
-        await wg.wait()
-        """

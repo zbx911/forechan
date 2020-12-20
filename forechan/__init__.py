@@ -10,5 +10,5 @@ from .pipe import pipe
 from .pubsub import sub
 from .select import select
 from .trans import trans
-from .types import Buf, Chan, WaitGroup
-from .wait_group import wait_group
+from .types import Buf, Chan, ChanClosed, ChanEmpty, ChanFull
+from .wait_group import wait_group, WaitGroup
