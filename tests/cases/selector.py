@@ -19,7 +19,6 @@ async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
 class SelectorSetup:
     class SetupChan(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
-            self.wg = wait_group()
             self.u1, self.u2 = chan(int), chan(int)
             self.se = await selector()
 
@@ -33,16 +32,10 @@ class UpstreamSend(SelectorSetup.SetupChan):
 
             @se.on_recvable(ch=self.u1)
             def c1(val: int) -> None:
-                with self.wg:
-                    self.assertEqual(val, 1)
+                self.assertEqual(val, 1)
+                se.close()
 
             @se.on_recvable(ch=self.u2)
             def c2(val: int) -> None:
-                with self.wg:
-                    self.assertEqual(val, 2)
-
-            async def c0() -> None:
-                await self.wg.wait()
+                self.assertEqual(val, 2)
                 se.close()
-
-            await go(c0())
