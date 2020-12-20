@@ -48,6 +48,7 @@ class AsyncClosable(Protocol):
 class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]):
     """
     CSP channels
+    <NOT thread safe>!
     """
 
     @abstractmethod
