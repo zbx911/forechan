@@ -8,7 +8,6 @@ from .ops import to_chan, with_closing
 from .pipe import pipe
 from .pubsub import sub
 from .select import select
-from .split import split
 from .trans import trans
 from .types import Buf, Chan, WaitGroup
 from .wait_group import wait_group
