@@ -3,14 +3,14 @@ from typing import MutableSequence, TypeVar
 
 from ._da import race
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .ops import with_closing
 from .types import Chan
 
 T = TypeVar("T")
 
 
-async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
+async def fan_in(*cs: Chan[T], cascade_close: bool = True, go: GO = go) -> Chan[T]:
     """
     # each item in `*cs` goes to `out`
 

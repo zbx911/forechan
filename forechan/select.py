@@ -3,13 +3,13 @@ from typing import Any, MutableSequence, Tuple
 
 from ._da import race
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .ops import with_closing
 from .types import Chan
 
 
 async def select(
-    *cs: Chan[Any], cascade_close: bool = True
+    *cs: Chan[Any], cascade_close: bool = True, go: GO = go
 ) -> Chan[Tuple[Chan[Any], Any]]:
     """
     async for ch, item in await select(ch1, ch2, ch3, ...):

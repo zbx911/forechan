@@ -1,7 +1,7 @@
 from typing import AsyncIterator, Callable, TypeVar
 
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .ops import with_closing
 from .types import Chan
 
@@ -13,6 +13,7 @@ async def trans(
     xform: Callable[[AsyncIterator[T]], AsyncIterator[U]],
     ch: Chan[T],
     cascade_close: bool = True,
+    go: GO = go,
 ) -> Chan[U]:
     """
      `ch`               `out`

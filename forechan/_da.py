@@ -5,7 +5,7 @@ from asyncio.tasks import FIRST_COMPLETED, wait
 from itertools import chain
 from typing import Awaitable, Sequence, Tuple, TypeVar
 
-from .go import go
+from .go import GO, go
 
 T = TypeVar("T")
 
@@ -14,7 +14,9 @@ async def pure(item: T) -> T:
     return item
 
 
-async def race(aw: Awaitable[T], *aws: Awaitable[T]) -> Tuple[T, Sequence[Future[T]]]:
+async def race(
+    aw: Awaitable[T], *aws: Awaitable[T], go: GO = go
+) -> Tuple[T, Sequence[Future[T]]]:
     futs = await gather(
         *(go(a) if iscoroutine(a) else pure(a) for a in chain((aw,), aws))
     )

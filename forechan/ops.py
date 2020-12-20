@@ -3,13 +3,13 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .types import AsyncClosable, Chan
 
 T = TypeVar("T")
 
 
-async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
+async def to_chan(it: Union[Iterable[T], AsyncIterable[T]], go: GO = go) -> Chan[T]:
     """
     Iterable[T] / AsyncIterable[T] -> Chan[T]
     """

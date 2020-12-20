@@ -4,7 +4,7 @@ from typing import Awaitable, MutableSequence, Sequence, TypeVar
 
 from ._da import race
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .ops import with_closing
 from .types import Chan
 
@@ -19,7 +19,9 @@ async def _send(fut: Awaitable[Chan[T]], item: T) -> None:
             ch.try_send(item)
 
 
-async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[Chan[T]]:
+async def fan_out(
+    ch: Chan[T], n: int, cascade_close: bool = True, go: GO = go
+) -> Sequence[Chan[T]]:
     """
     # each item from `ch` goes to each chan in `out`
 

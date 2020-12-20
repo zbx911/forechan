@@ -2,13 +2,13 @@ from asyncio.tasks import gather
 from typing import Callable, TypeVar
 
 from .chan import chan
-from .go import go
+from .go import GO, go
 from .types import Chan
 
 T = TypeVar("T")
 
 
-async def sub(predicate: Callable[[T], bool], pub: Chan[T]) -> Chan[T]:
+async def sub(predicate: Callable[[T], bool], pub: Chan[T], go: GO = go) -> Chan[T]:
     out: Chan[T] = chan()
 
     async def cont() -> None:

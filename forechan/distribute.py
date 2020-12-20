@@ -2,14 +2,16 @@ from asyncio.tasks import gather
 from typing import MutableSequence, TypeVar
 
 from ._da import race
-from .go import go
+from .go import GO, go
 from .ops import with_closing
 from .types import Chan
 
 T = TypeVar("T")
 
 
-async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -> None:
+async def distribute(
+    src: Chan[T], *dest: Chan[T], cascade_close: bool = True, go: GO = go
+) -> None:
     """
     # each item from `src` goes to first available chan in `*dest`
 
