@@ -28,39 +28,40 @@ class ChanFull(Exception):
     ...
 
 
-class Boolable(Protocol):
-    @abstractmethod
-    def __bool__(self) -> bool:
-        ...
-
-
 class Closable(Protocol):
     @abstractmethod
     def close(self) -> None:
-        ...
+        """
+        idempotent
+        """
 
 
 class AsyncClosable(Protocol):
     @abstractmethod
     async def close(self) -> None:
-        ...
+        """
+        idempotent
+        """
 
 
 @runtime_checkable
-class Chan(
-    Sized, Boolable, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]
-):
+class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol[T]):
     """
-    check if `ch` is open:
-    bool(ch), if ch:
+    CSP channels
+    """
 
-    check `ch` len:
-    len(ch)
-    """
+    @abstractmethod
+    def __bool__(self) -> bool:
+        """
+        # check if `ch` is open / closed
+        if ch:
+            ...
+        """
 
     @abstractmethod
     async def __aenter__(self) -> Chan[T]:
         """
+        # close `ch` on block exit
         async with ch:
             ...
         """
@@ -68,34 +69,34 @@ class Chan(
     @abstractmethod
     async def __anext__(self) -> T:
         """
-        close Chan[T] on exit
+        close `ch` on exit
         """
 
     @abstractmethod
     def __lt__(self, item: T) -> None:
         """
-        try_send:
+        # try_send:
         (ch < 123)
         """
 
     @abstractmethod
     def __gt__(self, _: Any) -> T:
         """
-        try_recv:
+        # try_recv:
         item = ([] < ch)
         """
 
     @abstractmethod
     async def __lshift__(self, item: T) -> None:
         """
-        send:
+        # send:
         await (ch << 123)
         """
 
     @abstractmethod
     async def __rlshift__(self, _: Any) -> T:
         """
-        recv:
+        # recv:
         item = await ([] << ch)
         """
 
@@ -158,35 +159,46 @@ class Chan(
 
 @runtime_checkable
 class Buf(Sized, Closable, Iterable[T], Protocol[T]):
+    """
+    bufs customize chan behaviour
+    <implementation should not throw errors>!
+    """
+
     @abstractmethod
     def empty(self) -> bool:
-        ...
+        """
+        chan will block on recv if `empty()`
+        """
 
     @abstractmethod
     def full(self) -> bool:
+        """
+        chan will block on send if `full()`
+        """
+
+    @abstractmethod
+    def push(self, item: T) -> None:
         ...
 
     @abstractmethod
-    def send(self, item: T) -> None:
-        ...
-
-    @abstractmethod
-    def recv(self) -> T:
+    def pop(self) -> T:
         ...
 
 
 @runtime_checkable
 class WaitGroup(Sized, ContextManager[None], Protocol):
     """
-    for _ in range(10):
-        async def f():
-            with wg:
-                ...
-        create_task(f())
+    wg = wait_group()
 
-    await wg.wait() # all tasks finish
+    # this is a `wg` block
+    with wg:
+        ...
     """
 
     @abstractmethod
     async def wait(self) -> None:
-        ...
+        """
+        # wait for all `wg` blocks to exit
+
+        await wg.wait()
+        """

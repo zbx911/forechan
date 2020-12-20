@@ -34,10 +34,10 @@ class NormalBuf(_BaseBuf[T], Buf[T]):
     def full(self) -> bool:
         return len(self) >= self._maxlen
 
-    def send(self, item: T) -> None:
+    def push(self, item: T) -> None:
         self._q.append(item)
 
-    def recv(self) -> T:
+    def pop(self) -> T:
         return self._q.popleft()
 
 
@@ -49,7 +49,7 @@ class SlidingBuf(NormalBuf[T]):
     def full(self) -> bool:
         return False
 
-    def send(self, item: T) -> None:
+    def push(self, item: T) -> None:
         if len(self) >= self._maxlen:
             self._q.popleft()
             self._q.append(item)
@@ -63,6 +63,6 @@ class DroppingBuf(NormalBuf[T]):
     def full(self) -> bool:
         return False
 
-    def send(self, item: T) -> None:
+    def push(self, item: T) -> None:
         if len(self) < self._maxlen:
             self._q.append(item)

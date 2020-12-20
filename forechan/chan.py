@@ -102,7 +102,7 @@ class _Chan(_BaseChan[T]):
             raise ChanFull()
         else:
             with self._state_handler():
-                self._b.send(item)
+                self._b.push(item)
 
     async def send(self, item: T) -> None:
         while self:
@@ -110,7 +110,7 @@ class _Chan(_BaseChan[T]):
                 await self._sendable_ev.wait()
             else:
                 with self._state_handler():
-                    return self._b.send(item)
+                    return self._b.push(item)
         else:
             raise ChanClosed()
 
@@ -121,7 +121,7 @@ class _Chan(_BaseChan[T]):
             raise ChanEmpty()
         else:
             with self._state_handler():
-                return self._b.recv()
+                return self._b.pop()
 
     async def recv(self) -> T:
         while self:
@@ -129,7 +129,7 @@ class _Chan(_BaseChan[T]):
                 await self._recvable_ev.wait()
             else:
                 with self._state_handler():
-                    return self._b.recv()
+                    return self._b.pop()
         else:
             raise ChanClosed()
 
