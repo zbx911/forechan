@@ -2,7 +2,7 @@ from asyncio import gather, sleep, wait_for
 from asyncio.tasks import create_task, gather
 from itertools import islice
 from random import shuffle
-from typing import Any, Awaitable, MutableSequence
+from typing import Any, Awaitable, MutableSequence, Tuple
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
@@ -22,7 +22,7 @@ async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
 
 
 class SelectBaseSetup:
-    class SetupChan(IsolatedAsyncioTestCase, HasChan):
+    class SetupChan(IsolatedAsyncioTestCase, HasChan[Tuple[Chan[Any], Any]]):
         async def asyncSetUp(self) -> None:
             self.u1, self.u2 = chan(int), chan(int)
             self.ch = await select(self.u1, self.u2)

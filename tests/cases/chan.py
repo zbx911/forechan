@@ -6,7 +6,7 @@ from ._base import BASE_CASES, HasChan
 
 
 class ChanBaseSetup:
-    class SetupChan(IsolatedAsyncioTestCase, HasChan):
+    class SetupChan(IsolatedAsyncioTestCase, HasChan[int]):
         async def asyncSetUp(self) -> None:
             self.ch = chan(int)
 
