@@ -11,6 +11,10 @@ T = TypeVar("T")
 async def pipe(
     src: Iterable[Chan[T]], dest: Chan[T], cascade_close: bool = True
 ) -> None:
+    """
+    for each chan in `src`
+    """
+
     channels: MutableSequence[Chan[T]] = [*src]
 
     async def cont() -> None:

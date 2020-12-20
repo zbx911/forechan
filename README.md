@@ -6,9 +6,9 @@
 
 Inspired by [`core.async`](https://github.com/clojure/core.async) from [clojure](https://github.com/clojure/clojure).
 
-## Example
+## Examples
 
-### Basic
+### Send & Recv
 
 ```python
 ch = chan(int)         # Chan[int]
@@ -16,21 +16,37 @@ await (ch << 2)        # or use `await ch.send(x)`
 two = await ([] << ch) # or use `await ch.recv()`
 assert two == 2
 
-# Most functions throw `ChanClosed` after closing
-# But `ch.close()` is idempotent
+# `ch.close()` is idempotent
 await ch.close()
+```
+
+### Basic
+
+```python
+if ch:
+  # if `Chan[T]` is open
+
+len(ch) # How many items are in `ch`
+
+async with ch:
+  # close `ch` after exiting lexical-scope
+
+async for item in ch:
+  # use `ch` as AsyncIterator
 ```
 
 ### Select
 
 ```python
-async for ch, item in await select(ch1, ch2):
+async for ch, item in await select(ch1, ch2, ch3, ...):
   if ch == ch1:
     # when receiving from `ch1`
     # do something with `item`
   elif ch == ch2:
     # when receiving from `ch2`
     # do something with `item`
+  elif ch == ch3:
+    ...
 ```
 
 ### Wait Group
@@ -58,21 +74,6 @@ two = ([] < ch)      # or use `ch.try_recv()`  , can throw `ChanEmpty`
 assert two == 2
 ```
 
-## Basic Concurrency Patterns
-
-```python
-if ch:
-  # if `Chan[T]` is open
-
-len(ch) # How many items are in `ch`
-
-async with ch:
-  # close `ch` after exiting lexical-scope
-
-async for item in ch:
-  # use `ch` as Iterator
-```
-
 ### Go -> Python
 
 The following are roughly equivalent
@@ -84,7 +85,7 @@ func fn() {
 go fn()
 ```
 
-Only that the `Python` version is single threaded
+When `GOMAXPROCS=1`
 
 ```python
 from asyncio import create_task
@@ -95,14 +96,14 @@ async def fn() -> None:
 create_task(fn())
 ```
 
+## Common Concurrency Patterns
+
 ### Consumer
 
 ```python
 async def consumer() -> None:
-  async for item in ch: # `Chan[T]` is also AsyncIterator
-    pass
+  async for item in ch:
     # do something with `item`, until `ch` is closed
-    # or call `await ch.close()` to shutdown producer
 ```
 
 ### Producer
@@ -112,17 +113,17 @@ def producer() -> Chan[int]:
   ch = chan(int)
 
   async def cont() -> None:
-    async with ch: # `Chan[T]` is AsyncContextManager, auto close `ch` when done
-      for i in range(100):
-        await (ch << i)
+    # auto close `ch` when done
+    async with ch:
+      while ...:
+        # send result `item` to downstream `ch`
+        await (ch << item)
 
   create_task(cont())
   return ch
 ```
 
-## Common Patterns
-
-Most QOL (Quality of Life) functions that return a `Chan[T]` such as `select(*chs)` or `trans(xform, ch)` or `fan_in(*chs)` take a named param: `cascade_close`.
+Most Quality of Life functions that return a `Chan[T]` such as `select(*cs)` or `trans(xform, ch)` or `fan_in(*cs)` take a named param: `cascade_close`.
 
 if `cascade_close = True`, which is the default. Closing the returned channel(s) will also close upstream channels.
 
@@ -131,8 +132,7 @@ if `cascade_close = True`, which is the default. Closing the returned channel(s)
 ```python
 cs: Iterable[Chan[T]] = produce_bunch_of_chans()
 
-# `ch` take items from each channel in `cs` until they are all closed
-#  after which `ch` will also close
+
 ch: Chan[T] = await fan_in(*cs)
 ```
 
@@ -165,8 +165,5 @@ ch1: Chan[int] = one_to_inf()
 ch2: Chan[str] = await trans(xform, ch=ch1)
 ```
 
-## Architectural Patterns
-
-### Topics
 
 ### Simple RPC

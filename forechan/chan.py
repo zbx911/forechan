@@ -147,5 +147,12 @@ class _Chan(_BaseChan[T]):
 
 
 def chan(t: Optional[Type[T]] = None, buf: Optional[Buf[T]] = None) -> Chan[T]:
-    b = buf or NormalBuf[T](maxlen=1)
+    """
+    if `buf` is None:
+        return `Chan[T]` with blocking buffer size of 1
+    else:
+        return `Chan[T]` with custom `buf`
+    """
+
+    b = NormalBuf[T](maxlen=1) if buf is None else buf
     return _Chan[T](b=b)

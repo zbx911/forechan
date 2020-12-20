@@ -9,6 +9,10 @@ T = TypeVar("T")
 
 
 async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
+    """
+    Iterable[T] / AsyncIterable[T] -> Chan[T]
+    """
+
     ch: Chan[T] = chan()
 
     async def gen() -> AsyncIterator[T]:
@@ -36,6 +40,12 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
 async def with_closing(
     *closables: AsyncClosable, close: bool = True
 ) -> AsyncIterator[None]:
+    """
+    async with with_closing(*cs):
+        ...
+    # close each `chan` in *cs after block
+    """
+
     try:
         yield None
     finally:

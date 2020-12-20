@@ -10,6 +10,16 @@ T = TypeVar("T")
 
 
 async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
+    """
+    `*cs`
+    ------>|
+    ------>|
+    ------>|---> `out`
+    ------>|
+    ------>|
+    ...
+    """
+
     out: Chan[T] = chan()
     channels: MutableSequence[Chan[T]] = [*cs]
 
