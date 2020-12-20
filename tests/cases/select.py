@@ -1,4 +1,4 @@
-from asyncio import gather, sleep, wait_for
+from asyncio import sleep
 from asyncio.tasks import create_task, gather
 from itertools import islice
 from random import shuffle
@@ -31,10 +31,14 @@ class SelectBaseSetup:
 class UpstreamSend(SelectBaseSetup.SetupChan):
     async def test_1(self) -> None:
         await (self.u1 << 1)
-        r1 = await ([] << self.ch)
+        c1, r1 = await ([] << self.ch)
         await (self.u2 << 2)
-        r2 = await ([] << self.ch)
+        c2, r2 = await ([] << self.ch)
+
+        self.assertNotEqual(self.u1, self.u2)
+        self.assertEqual(c1, self.u1)
         self.assertEqual(r1, 1)
+        self.assertEqual(c2, self.u2)
         self.assertEqual(r2, 2)
 
 

@@ -1,26 +1,30 @@
 from asyncio.tasks import create_task, gather
-from typing import Tuple, TypeVar
+from typing import MutableSequence, TypeVar
 
+from ._da import race
 from .chan import chan
 from .ops import with_closing
-from .select import select
 from .types import Chan
 
 T = TypeVar("T")
 
 
 async def fan_in(*cs: Chan[T], cascade_close: bool = True) -> Chan[T]:
-    upstream: Chan[Tuple[Chan[T], T]] = await select(*cs)
     out: Chan[T] = chan()
+    channels: MutableSequence[Chan[T]] = [*cs]
 
     async def cont() -> None:
         async with out:
-            async with with_closing(upstream, close=cascade_close):
-                while upstream and out:
-                    await gather(upstream._on_recvable(), out._on_sendable())
-                    if upstream.recvable() and out.sendable():
-                        _, item = upstream.try_recv()
-                        out.try_send(item)
+            async with with_closing(*cs, close=cascade_close):
+                while out and channels:
+                    (ready, _), _ = await gather(
+                        race(*(ch._on_recvable() for ch in channels)),
+                        out._on_sendable(),
+                    )
+                    if not ready:
+                        channels[:] = [ch for ch in channels if ch]
+                    elif ready.recvable() and out.sendable():
+                        out.try_send(ready.try_recv())
 
     create_task(cont())
     return out

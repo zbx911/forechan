@@ -24,7 +24,7 @@ async def select(
                     if not ready:
                         channels[:] = [ch for ch in channels if ch]
                     elif ready.recvable() and out.sendable():
-                        out.try_send(ready.try_recv())
+                        out.try_send((ready, ready.try_recv()))
 
     create_task(cont())
     return out

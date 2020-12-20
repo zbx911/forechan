@@ -25,7 +25,7 @@ async def trans(
                         if out.sendable():
                             out.try_send(item)
                             break
-                    if not out:
+                    else:
                         break
 
     create_task(cont())
