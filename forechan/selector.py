@@ -54,7 +54,7 @@ class _Selector(Selector):
                     else:
                         assert False
 
-        await self._go(cont())
+        await (await self._go(cont()))
 
     def close(self) -> None:
         self._closed = True
