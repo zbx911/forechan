@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from asyncio import sleep
 from asyncio.locks import Event
 from contextlib import contextmanager
