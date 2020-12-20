@@ -6,13 +6,13 @@ from ...forechan.wait_group import wait_group
 from ..consts import SMOL_TIME
 
 
-class WaitGroupBaseSetup:
+class WaitGroupSetup:
     class SetupWG(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
             self.wg = wait_group()
 
 
-class WaitGroup(WaitGroupBaseSetup.SetupWG):
+class WaitGroup(WaitGroupSetup.SetupWG):
     async def test_1(self) -> None:
         await wait_for(self.wg.wait(), timeout=SMOL_TIME)
 

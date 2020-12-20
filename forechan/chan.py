@@ -67,7 +67,7 @@ class _Chan(_BaseChan[T]):
 
     async def close(self) -> None:
         await sleep(0)
-        self._b.close()
+        self._b.clear()
         self._onclose.set()
         self._sendable_ev.set()
         self._recvable_ev.set()

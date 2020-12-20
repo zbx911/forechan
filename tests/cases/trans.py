@@ -17,14 +17,14 @@ async def xform(it: AsyncIterator[int]) -> AsyncIterator[int]:
         yield n + 1
 
 
-class TransBaseSetup:
+class TransSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChan[int]):
         async def asyncSetUp(self) -> None:
             self.p = chan(int)
             self.ch = await trans(xform, ch=self.p)
 
 
-class UpstreamSend(TransBaseSetup.SetupChan):
+class UpstreamSend(TransSetup.SetupChan):
     async def test_1(self) -> None:
         await (self.p << 1)
         await ([] << self.ch)
@@ -51,5 +51,5 @@ class UpstreamSend(TransBaseSetup.SetupChan):
         self.assertEqual(len(self.ch), 0)
 
 
-TEST_MATRIX = polyclass_matrix(extract_testcases(TransBaseSetup), BASE_CASES)
+TEST_MATRIX = polyclass_matrix(extract_testcases(TransSetup), BASE_CASES)
 load_tests = mk_loader(*TEST_MATRIX)

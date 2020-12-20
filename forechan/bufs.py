@@ -1,12 +1,12 @@
 from collections import deque
 from typing import Deque, Generic, Iterator, MutableSequence, Sized, TypeVar
 
-from .types import Buf, Closable
+from .types import Buf, Clearable
 
 T = TypeVar("T")
 
 
-class _BaseBuf(Sized, Closable, Generic[T]):
+class _BaseBuf(Sized, Clearable, Generic[T]):
     _q: MutableSequence[T]
 
     def __len__(self) -> int:
@@ -18,7 +18,7 @@ class _BaseBuf(Sized, Closable, Generic[T]):
     def empty(self) -> bool:
         return not len(self)
 
-    def close(self) -> None:
+    def clear(self) -> None:
         self._q.clear()
 
 

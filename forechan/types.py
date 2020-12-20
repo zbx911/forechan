@@ -28,9 +28,9 @@ class ChanFull(Exception):
     ...
 
 
-class Closable(Protocol):
+class Clearable(Protocol):
     @abstractmethod
-    def close(self) -> None:
+    def clear(self) -> None:
         """
         idempotent
         """
@@ -159,7 +159,7 @@ class Chan(Sized, AsyncClosable, AsyncContextManager, AsyncIterable[T], Protocol
 
 
 @runtime_checkable
-class Buf(Sized, Closable, Iterable[T], Protocol[T]):
+class Buf(Sized, Clearable, Iterable[T], Protocol[T]):
     """
     bufs customize chan behaviour
     <implementation should not throw errors>!

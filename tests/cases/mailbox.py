@@ -20,13 +20,13 @@ async def echo(
             break
 
 
-class MailBoxBaseSetup:
+class MailBoxSetup:
     class SetupChan(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
             self.ask, self.reply, self.req = await mb(int, int)
 
 
-class MailBoxAskReply(MailBoxBaseSetup.SetupChan):
+class MailBoxAskReply(MailBoxSetup.SetupChan):
     async def test_1(self) -> None:
         create_task(echo(self.ask, reply=self.reply, cycles=BIG_REP_FACTOR))
         with self.subTest():

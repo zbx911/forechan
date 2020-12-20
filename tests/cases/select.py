@@ -21,14 +21,14 @@ async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
     create_task(cont())
 
 
-class SelectBaseSetup:
+class SelectSetup:
     class SetupChan(IsolatedAsyncioTestCase, HasChan[Tuple[Chan[Any], Any]]):
         async def asyncSetUp(self) -> None:
             self.u1, self.u2 = chan(int), chan(int)
             self.ch = await select(self.u1, self.u2)
 
 
-class UpstreamSend(SelectBaseSetup.SetupChan):
+class UpstreamSend(SelectSetup.SetupChan):
     async def test_1(self) -> None:
         await (self.u1 << 1)
         c1, r1 = await ([] << self.ch)
@@ -42,5 +42,5 @@ class UpstreamSend(SelectBaseSetup.SetupChan):
         self.assertEqual(r2, 2)
 
 
-TEST_MATRIX = polyclass_matrix(extract_testcases(SelectBaseSetup), BASE_CASES)
+TEST_MATRIX = polyclass_matrix(extract_testcases(SelectSetup), BASE_CASES)
 load_tests = mk_loader(*TEST_MATRIX)
