@@ -10,16 +10,21 @@ U = TypeVar("U")
 
 
 async def trans(
-    trans: Callable[[AsyncIterator[T]], AsyncIterator[U]],
+    xform: Callable[[AsyncIterator[T]], AsyncIterator[U]],
     ch: Chan[T],
     cascade_close: bool = True,
 ) -> Chan[U]:
+    """
+     `ch`               `out`
+    ------>|[transform]|------>
+    """
+
     out: Chan[U] = chan()
 
     async def cont() -> None:
         async with out:
             async with with_closing(ch, close=cascade_close):
-                async for item in trans(ch):
+                async for item in xform(ch):
                     while out:
                         await out._on_sendable()
                         if out.sendable():
