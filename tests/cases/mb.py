@@ -6,7 +6,6 @@ from unittest import IsolatedAsyncioTestCase
 from ...forechan.mb import mb
 from ...forechan.types import Chan
 from ..consts import BIG_REP_FACTOR
-from ..da import profiler
 
 
 async def echo(
@@ -30,8 +29,7 @@ class MailBoxBaseSetup:
 class MailBoxAskReply(MailBoxBaseSetup.SetupChan):
     async def test_1(self) -> None:
         create_task(echo(self.ask, reply=self.reply, cycles=BIG_REP_FACTOR))
-        with profiler():
-            with self.subTest():
-                for i in range(BIG_REP_FACTOR):
-                    ans = await self.req(i)
-                    self.assertEqual(ans, i)
+        with self.subTest():
+            for i in range(BIG_REP_FACTOR):
+                ans = await self.req(i)
+                self.assertEqual(ans, i)
