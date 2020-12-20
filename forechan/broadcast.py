@@ -1,8 +1,8 @@
 from typing import Optional, Type, TypeVar
 
+from .bufs import _BaseBuf
 from .chan import chan
 from .types import Buf, Chan
-from .bufs import _BaseBuf
 
 T = TypeVar("T")
 

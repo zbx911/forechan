@@ -1,8 +1,8 @@
 from asyncio.tasks import gather
 from typing import Callable, TypeVar
 
-from .go import go
 from .chan import chan
+from .go import go
 from .types import Chan
 
 T = TypeVar("T")

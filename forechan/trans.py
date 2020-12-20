@@ -1,7 +1,7 @@
 from typing import AsyncIterator, Callable, TypeVar
 
-from .go import go
 from .chan import chan
+from .go import go
 from .ops import with_closing
 from .types import Chan
 

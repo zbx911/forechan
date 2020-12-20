@@ -2,8 +2,8 @@ from asyncio.tasks import gather
 from typing import MutableSequence, TypeVar
 
 from ._da import race
-from .go import go
 from .chan import chan
+from .go import go
 from .ops import with_closing
 from .types import Chan
 

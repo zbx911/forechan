@@ -1,5 +1,5 @@
-from typing import Awaitable, Callable, TypeVar, Protocol, Any
 from asyncio import create_task
+from typing import Any, Awaitable, Protocol, TypeVar
 
 T = TypeVar("T")
 

@@ -2,8 +2,8 @@ from asyncio.tasks import gather
 from contextlib import asynccontextmanager
 from typing import AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
-from .go import go
 from .chan import chan
+from .go import go
 from .types import AsyncClosable, Chan
 
 T = TypeVar("T")
