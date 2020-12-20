@@ -1,7 +1,8 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from contextlib import asynccontextmanager
 from typing import AsyncIterable, AsyncIterator, Iterable, TypeVar, Union, cast
 
+from ._sched import go
 from .chan import chan
 from .types import AsyncClosable, Chan
 
@@ -32,7 +33,7 @@ async def to_chan(it: Union[Iterable[T], AsyncIterable[T]]) -> Chan[T]:
                 if not ch:
                     break
 
-    create_task(cont())
+    await go(cont())
     return ch
 
 

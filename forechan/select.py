@@ -1,7 +1,8 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from typing import Any, MutableSequence, Tuple
 
 from ._da import race
+from ._sched import go
 from .chan import chan
 from .ops import with_closing
 from .types import Chan
@@ -36,5 +37,5 @@ async def select(
                     elif ready.recvable() and out.sendable():
                         out.try_send((ready, ready.try_recv()))
 
-    create_task(cont())
+    await go(cont())
     return out

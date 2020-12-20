@@ -1,9 +1,10 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from typing import MutableSequence, TypeVar
 
+from ._da import race
+from ._sched import go
 from .ops import with_closing
 from .types import Chan
-from ._da import race
 
 T = TypeVar("T")
 
@@ -35,4 +36,4 @@ async def distribute(src: Chan[T], *dest: Chan[T], cascade_close: bool = True) -
                 elif src.recvable() and ready.sendable():
                     ready.try_send(src.try_recv())
 
-    create_task(cont())
+    await go(cont())

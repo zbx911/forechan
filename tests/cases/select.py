@@ -1,10 +1,11 @@
 from asyncio import sleep
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from itertools import islice
 from random import shuffle
 from typing import Any, Awaitable, MutableSequence, Tuple
 from unittest import IsolatedAsyncioTestCase
 
+from ...forechan._sched import go
 from ...forechan.chan import chan
 from ...forechan.select import select
 from ...forechan.types import Chan
@@ -18,7 +19,7 @@ async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
         await sleep(delay)
         await (ch << n)
 
-    create_task(cont())
+    await go(cont())
 
 
 class SelectSetup:

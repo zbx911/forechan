@@ -1,8 +1,9 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from itertools import islice
 from typing import Awaitable, MutableSequence, Sequence, TypeVar
 
 from ._da import race
+from ._sched import go
 from .chan import chan
 from .ops import with_closing
 from .types import Chan
@@ -52,5 +53,5 @@ async def fan_out(ch: Chan[T], n: int, cascade_close: bool = True) -> Sequence[C
                         ready.try_send(item)
                         await gather(*(_send(fut, item=item) for fut in pending))
 
-    create_task(cont())
+    await go(cont())
     return out

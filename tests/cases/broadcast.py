@@ -1,7 +1,7 @@
-from tests.consts import SMOL_REP_FACTOR
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.broadcast import broadcast
+from ..consts import SMOL_REP_FACTOR
 
 
 class BroadcastSetup:

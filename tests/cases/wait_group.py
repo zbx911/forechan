@@ -1,7 +1,8 @@
 from asyncio import TimeoutError, wait_for
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from unittest import IsolatedAsyncioTestCase
 
+from ...forechan._sched import go
 from ...forechan.wait_group import wait_group
 from ..consts import SMOL_TIME
 
@@ -39,7 +40,7 @@ class WaitGroup(WaitGroupSetup.SetupWG):
                 with self.wg:
                     i -= 1
 
-            create_task(cont())
+            await go(cont())
 
         await self.wg.wait()
         self.assertEqual(i, 0)

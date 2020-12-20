@@ -1,7 +1,8 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from typing import Iterable, MutableSequence, TypeVar
 
 from ._da import race
+from ._sched import go
 from .ops import with_closing
 from .types import Chan
 
@@ -38,4 +39,4 @@ async def pipe(
                     elif ready.recvable() and dest.sendable():
                         dest.try_send(ready.try_recv())
 
-    create_task(cont())
+    await go(cont())

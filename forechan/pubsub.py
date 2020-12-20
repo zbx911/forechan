@@ -1,6 +1,7 @@
-from asyncio.tasks import create_task, gather
+from asyncio.tasks import gather
 from typing import Callable, TypeVar
 
+from ._sched import go
 from .chan import chan
 from .types import Chan
 
@@ -19,6 +20,5 @@ async def sub(predicate: Callable[[T], bool], pub: Chan[T]) -> Chan[T]:
                     if predicate(item):
                         out.try_send(pub.try_recv())
 
-    create_task(cont())
-
+    await go(cont())
     return out

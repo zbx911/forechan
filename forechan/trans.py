@@ -1,6 +1,6 @@
-from asyncio.tasks import create_task
 from typing import AsyncIterator, Callable, TypeVar
 
+from ._sched import go
 from .chan import chan
 from .ops import with_closing
 from .types import Chan
@@ -33,5 +33,5 @@ async def trans(
                     else:
                         break
 
-    create_task(cont())
+    await go(cont())
     return out
