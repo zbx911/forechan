@@ -36,6 +36,14 @@ class Clearable(Protocol):
         """
 
 
+class Closable(Protocol):
+    @abstractmethod
+    async def close(self) -> None:
+        """
+        idempotent
+        """
+
+
 class AsyncClosable(Protocol):
     @abstractmethod
     async def aclose(self) -> None:
