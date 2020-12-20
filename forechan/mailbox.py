@@ -42,6 +42,10 @@ async def mb_from(
 async def mb(
     t: Optional[Type[T]] = None, u: Optional[Type[U]] = None
 ) -> Tuple[Chan[Tuple[int, T]], Chan[Tuple[int, U]], Callable[[T], Awaitable[U]]]:
+    """
+    see `mb_from`
+    """
+
     uids = count()
     ask: Chan[Tuple[int, T]] = chan()
     reply: Chan[Tuple[int, U]] = chan()
