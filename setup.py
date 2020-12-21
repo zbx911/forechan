@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from setuptools import setup
-
+from setuptools import find_packages, setup
 
 setup(
     name="forechan",
@@ -12,5 +11,5 @@ setup(
     author="ms-jpq",
     author_email="github@bigly.dog",
     url="https://github.com/ms-jpq/forechan",
-    packages=["forechan"],
+    packages=find_packages(exclude=("tests*",)),
 )
