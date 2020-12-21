@@ -1,18 +1,24 @@
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Protocol
+from asyncio.tasks import sleep
+from math import inf
+from time import monotonic
+from typing import MutableSequence, Optional, Protocol
 
-from forechan.types import Chan
+from .broadcast import broadcast
+from .go import GO, go
+from .types import Boolable, Chan
 
 
-class Context(Protocol):
+class Context(Boolable, Protocol):
     @property
     @abstractmethod
-    def cancelled(self) -> Chan[None]:
+    def done(self) -> Chan[None]:
         """
         a `broadcast` chan of cancellation signifier
         """
 
-    @property
     @abstractmethod
     def ttl(self) -> float:
         """
@@ -21,7 +27,58 @@ class Context(Protocol):
         """
 
     @abstractmethod
-    def _cancel() -> None:
+    def cancel(self) -> None:
         """
         turn on `cancelled` chan
         """
+
+    @abstractmethod
+    def attach(self, child: Context) -> None:
+        """
+        children are cancelled when parents are
+        """
+
+
+class _Context(Context):
+    def __init__(self, deadline: float) -> None:
+        self._ch: Chan[None] = broadcast(None)
+        self._deadline = deadline
+        self._children: MutableSequence[Context] = []
+
+    def __bool__(self) -> bool:
+        return not self.done.recvable()
+
+    @property
+    def done(self) -> Chan[None]:
+        return self._ch
+
+    def ttl(self) -> float:
+        return max(self._deadline - monotonic(), 0.0)
+
+    def cancel(self) -> None:
+        for child in self._children:
+            child.cancel()
+        self.done.try_send(None)
+
+    def attach(self, child: Context) -> None:
+        self._children.append(child)
+        if not self:
+            child.cancel()
+
+
+async def ctx_with_timeout(
+    ttl: float, parent: Optional[Context] = None, go: GO = go
+) -> Context:
+    monotonic_deadline = monotonic() + ttl
+    ctx = _Context(deadline=monotonic_deadline)
+    if parent is not None:
+        parent.attach(ctx)
+
+    async def cont() -> None:
+        await sleep(ttl)
+        ctx.cancel()
+
+    if ttl != inf:
+        await go(cont())
+
+    return ctx
