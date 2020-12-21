@@ -53,7 +53,7 @@ class _Context(Context):
         return self._ch
 
     def ttl(self) -> float:
-        return max(self._deadline - monotonic(), 0.0)
+        return max(self._deadline - monotonic(), 0.0) if self else 0.0
 
     def cancel(self) -> None:
         for child in self._children:

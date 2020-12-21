@@ -43,3 +43,22 @@ class ContextTimeout(IsolatedAsyncioTestCase):
         await sleep(0)
         self.assertEqual(ctx.ttl(), 0)
         self.assertFalse(ctx)
+
+    async def test_7(self) -> None:
+        ttl = 10
+        ctx = await ctx_with_timeout(ttl)
+        ctx.cancel()
+        self.assertEqual(ctx.ttl(), 0)
+        self.assertFalse(ctx)
+
+
+class ContextHeirarchy(IsolatedAsyncioTestCase):
+    async def test_1(self) -> None:
+        ctx1 = await ctx_with_timeout(inf)
+        ctx2 = await ctx_with_timeout(inf, parent=ctx1)
+        ctx3 = await ctx_with_timeout(inf, parent=ctx2)
+
+        ctx1.cancel()
+        self.assertFalse(ctx1)
+        self.assertFalse(ctx2)
+        self.assertFalse(ctx3)
