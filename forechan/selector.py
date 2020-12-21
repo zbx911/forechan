@@ -60,6 +60,9 @@ class _Selector(Selector):
         self._sc: MutableMapping[Chan[Any], Sender[Any]] = {}
         self._rc: MutableMapping[Chan[Any], Recver[Any]] = {}
 
+    def __bool__(self) -> bool:
+        return not self._on_closed.is_set()
+
     async def __aexit__(self, *_: Any) -> None:
         async def cont() -> None:
             async with with_aclosing(*self._sc, *self._rc, close=self._cc):

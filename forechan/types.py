@@ -27,6 +27,16 @@ class ChanFull(Exception):
     ...
 
 
+class Boolable(Protocol):
+    @abstractmethod
+    def __bool__(self) -> bool:
+        """
+        # check if `resource` is open / closed
+        if resource:
+            ...
+        """
+
+
 class Clearable(Protocol):
     @abstractmethod
     def clear(self) -> None:
@@ -35,7 +45,7 @@ class Clearable(Protocol):
         """
 
 
-class Closable(Protocol):
+class Closable(Boolable, Protocol):
     @abstractmethod
     def close(self) -> None:
         """
@@ -43,7 +53,7 @@ class Closable(Protocol):
         """
 
 
-class AsyncClosable(Protocol):
+class AsyncClosable(Boolable, Protocol):
     @abstractmethod
     async def aclose(self) -> None:
         """
@@ -59,14 +69,6 @@ class Chan(
     CSP channels
     <NOT thread safe>!
     """
-
-    @abstractmethod
-    def __bool__(self) -> bool:
-        """
-        # check if `ch` is open / closed
-        if ch:
-            ...
-        """
 
     @abstractmethod
     async def __aenter__(self) -> Chan[T]:
