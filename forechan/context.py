@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio.tasks import sleep
-from math import inf
+from math import isinf
 from time import monotonic
 from typing import MutableSequence, Optional, Protocol
 
@@ -78,7 +78,7 @@ async def ctx_with_timeout(
         await sleep(ttl)
         ctx.cancel()
 
-    if ttl != inf:
+    if not isinf(ttl):
         await go(cont())
 
     return ctx

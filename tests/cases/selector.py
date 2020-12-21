@@ -37,3 +37,5 @@ class UpstreamSend(SelectorSetup.SetupChan):
             def c2(val: int) -> None:
                 self.assertEqual(val, 2)
                 sr.close()
+
+        self.assertFalse(sr)
