@@ -1,8 +1,8 @@
+from asyncio.tasks import create_task
 from itertools import count
 from typing import Tuple
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.go import go
 from ...forechan.mailbox import mb
 from ...forechan.types import Chan
 from ..consts import BIG_REP_FACTOR
@@ -28,7 +28,7 @@ class MailBoxSetup:
 
 class MailBoxAskReply(MailBoxSetup.SetupChan):
     async def test_1(self) -> None:
-        await go(echo(self.ask, reply=self.reply, cycles=BIG_REP_FACTOR))
+        create_task(echo(self.ask, reply=self.reply, cycles=BIG_REP_FACTOR))
         with self.subTest():
             for i in range(BIG_REP_FACTOR):
                 ans = await self.req(i)

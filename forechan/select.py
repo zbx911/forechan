@@ -1,18 +1,13 @@
-from asyncio.tasks import gather
-from typing import Any, MutableSequence, Tuple
+from asyncio.tasks import create_task
+from typing import Any, AsyncIterator, MutableSequence, Tuple
 
 from ._da import race
-from .chan import chan
-from .go import GO, go
-from .ops import with_aclosing
 from .types import Chan
 
 
-async def select(
-    *cs: Chan[Any], cascade_close: bool = True, go: GO = go
-) -> Chan[Tuple[Chan[Any], Any]]:
+async def select(*cs: Chan[Any]) -> AsyncIterator[Tuple[Chan[Any], Any]]:
     """
-    async for ch, item in await select(ch1, ch2, ch3, ...):
+    async for ch, item in select(ch1, ch2, ch3, ...):
     if ch == ch1:
         ...
     elif ch == ch2:
@@ -21,21 +16,11 @@ async def select(
         ...
     """
 
-    out: Chan[Any] = chan()
-    channels: MutableSequence[Chan[Any]] = [*cs]
+    chans: MutableSequence[Chan[Any]] = [*cs]
 
-    async def cont() -> None:
-        async with out:
-            async with with_aclosing(*cs, close=cascade_close):
-                while out and channels:
-                    (ready, _), _ = await gather(
-                        race(*(ch._on_recvable() for ch in channels)),
-                        out._on_sendable(),
-                    )
-                    if not ready:
-                        channels[:] = [ch for ch in channels if ch]
-                    elif ready.recvable() and out.sendable():
-                        out.try_send((ready, ready.try_recv()))
-
-    await go(cont())
-    return out
+    while chans:
+        ready, _ = await race(*(create_task(c._on_recvable()) for c in chans))
+        if not ready:
+            chans[:] = [c for c in chans if c]
+        elif ready.recvable():
+            yield ready, ready.try_recv()

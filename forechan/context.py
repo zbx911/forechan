@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio.tasks import sleep
+from asyncio.tasks import create_task, sleep
 from math import isinf
 from time import monotonic
 from typing import MutableSequence, Optional, Protocol
 
 from .broadcast import broadcast
-from .go import GO, go
 from .types import Boolable, Chan
 
 
@@ -66,19 +65,18 @@ class _Context(Context):
             child.cancel()
 
 
-async def ctx_with_timeout(
-    ttl: float, parent: Optional[Context] = None, go: GO = go
-) -> Context:
+async def ctx_with_timeout(ttl: float, parent: Optional[Context] = None) -> Context:
     monotonic_deadline = monotonic() + ttl
     ctx = _Context(deadline=monotonic_deadline)
     if parent is not None:
         parent.attach(ctx)
 
-    async def cont() -> None:
-        await sleep(ttl)
-        ctx.cancel()
-
     if not isinf(ttl):
-        await go(cont())
+
+        async def cont() -> None:
+            await sleep(ttl)
+            ctx.cancel()
+
+        create_task(cont())
 
     return ctx

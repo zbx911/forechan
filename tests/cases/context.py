@@ -4,7 +4,6 @@ from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
 from ...forechan.context import ctx_with_timeout
-from ...forechan.go import go
 
 
 class ContextTimeout(IsolatedAsyncioTestCase):

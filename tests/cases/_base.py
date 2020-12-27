@@ -1,10 +1,10 @@
 from asyncio import TimeoutError, gather, wait_for
+from asyncio.tasks import create_task
 from itertools import islice
 from random import shuffle
 from typing import Any, Awaitable, MutableSequence, Protocol, TypeVar
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.go import go
 from ...forechan.types import Chan, ChanClosed, ChanEmpty, ChanFull
 from ..consts import BIG_REP_FACTOR, MODICUM_TIME, SMOL_REP_FACTOR, SMOL_TIME
 from ..da import extract_testcases
@@ -110,8 +110,9 @@ class BaseCases:
             async def cont() -> None:
                 await gather([] << self.ch, [] << self.ch)
 
-            task = await go(cont())
-            await wait_for(gather(task, self.ch << 1, self.ch << 1), timeout=SMOL_TIME)
+            await wait_for(
+                gather(cont(), self.ch << 1, self.ch << 1), timeout=SMOL_TIME
+            )
 
         async def test_3(self) -> None:
             async def c1() -> None:

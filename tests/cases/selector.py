@@ -2,17 +2,8 @@ from asyncio import sleep
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
-from ...forechan.go import go
 from ...forechan.selector import selector
 from ...forechan.types import Chan
-
-
-async def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
-    async def cont() -> None:
-        await sleep(delay)
-        await (ch << n)
-
-    await go(cont())
 
 
 class SelectorSetup:
