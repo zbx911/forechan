@@ -45,15 +45,15 @@ async def _send(fut: Awaitable[Chan[T]], item: T) -> None:
 
 async def pipe_parallel(src: Iterable[Chan[T]], dest: Iterable[Chan[T]]) -> None:
     """
-    # each item from `ch` goes to each chan in `out`
+    # each item in `src` goes to each ch in `dest`
 
-           `out`
-           |------>
-     `ch`  |------>
-    ------>|------>
-           |------>
-           |------>
-           ...
+     `src`       `dest`
+    ------>|    |------>|
+    ------>|    |------>|
+    ------>|--->|------>|
+    ------>|    |------>|
+    ------>|    |------>|
+    ...
     """
 
     r_chans: MutableSequence[Chan[T]] = [*src]
