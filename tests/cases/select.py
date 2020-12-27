@@ -37,7 +37,3 @@ class UpstreamSend(SelectSetup.SetupChan):
         self.assertEqual(r1, 1)
         self.assertEqual(c2, self.u2)
         self.assertEqual(r2, 2)
-
-
-TEST_MATRIX = polyclass_matrix(extract_testcases(SelectSetup), BASE_CASES)
-load_tests = mk_loader(*TEST_MATRIX)
