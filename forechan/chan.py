@@ -47,6 +47,10 @@ class _BaseChan(Chan[T], AsyncIterator[T]):
         await sleep(0)
         self._onclose.set()
 
+    async def _on_closed(self) -> Chan[T]:
+        await self._onclose.wait()
+        return self
+
 
 class _Chan(_BaseChan[T]):
     def __init__(self, b: Buf[T]) -> None:
@@ -136,10 +140,6 @@ class _Chan(_BaseChan[T]):
                     return self._b.pop()
         else:
             raise ChanClosed()
-
-    async def _on_closed(self) -> Chan[T]:
-        await self._onclose.wait()
-        return self
 
     async def _on_sendable(self) -> Chan[T]:
         await self._sendable_ev.wait()
