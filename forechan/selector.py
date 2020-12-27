@@ -60,7 +60,7 @@ class _Selector(Selector):
 
     async def __aexit__(self, *_: Any) -> None:
         while self._sc or self._rc:
-            ch, _ = await race(
+            ch, __ = await race(
                 *(create_task(ch._on_sendable()) for ch in self._sc),
                 *(create_task(ch._on_recvable()) for ch in self._rc),
             )

@@ -1,4 +1,3 @@
-from asyncio import sleep
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan

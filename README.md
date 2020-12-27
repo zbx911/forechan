@@ -38,7 +38,7 @@ async for item in ch:
 ### Select
 
 ```python
-async for ch, item in await select(ch1, ch2, ch3, ...):
+async for ch, item in select(ch1, ch2, ch3, ...):
   if ch == ch1:
     ...
   elif ch == ch2:
@@ -89,7 +89,7 @@ When `GOMAXPROCS=1`
 async def fn() -> None:
   # do things here
 
-await go(fn())
+create_task(fn())
 ```
 
 ## Common Concurrency Patterns
@@ -115,51 +115,8 @@ def producer() -> Chan[int]:
         # send result `item` to downstream `ch`
         await (ch << item)
 
-  await go(cont())
+  create_task(cont())
   return ch
 ```
 
-Most Quality of Life functions that return a `Chan[T]` such as `select(*cs)` or `trans(xform, ch)` or `fan_in(*cs)` take a named param: `cascade_close`.
-
-if `cascade_close = True`, which is the default. Closing the returned channel(s) will also close upstream channels.
-
-### Fan In
-
-```python
-cs: Iterable[Chan[T]] = produce_bunch_of_chans()
-
-
-ch: Chan[T] = await fan_in(*cs)
-```
-
-### Fan Out
-
-```python
-ch: Chan[T] = produce_some_channel()
-
-# each entry of `ch` will get send to each channel in `cs`
-# closing `ch` will close each of `cs`
-cs: Sequence[Chan[T]] = await fan_out(ch)
-```
-
-### Stream Transform
-
-```python
-# regular old python generator
-# can do `map` and `filter`, `flatmap`, whatever
-async def xform(stream: AsyncIterator[int]) -> AsyncIterator[str]:
-  for i in stream:
-    if i > 100:
-      break # `ch2` will be shut off
-    elif is_prime(i):
-      yield f"{i + 1} is a prime + 1"
-
-# say one_to_inf() is a `Chan[int]` of ∞ integers
-ch1: Chan[int] = one_to_inf()
-
-# `ch2` is both a mapped and filtered stream
-ch2: Chan[str] = await trans(xform, ch=ch1)
-```
-
-
-### Simple RPC
+## Series of Tubes
