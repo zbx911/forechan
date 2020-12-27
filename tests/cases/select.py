@@ -1,13 +1,10 @@
 from asyncio import sleep
 from asyncio.tasks import create_task
-from typing import Any, Tuple
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
 from ...forechan.select import select
 from ...forechan.types import Chan
-from ..da import extract_testcases, mk_loader, polyclass_matrix
-from ._base import BASE_CASES
 
 
 def delayed_send(ch: Chan[int], n: int, delay: float) -> None:
