@@ -11,18 +11,18 @@ from ..consts import BIG_REP_FACTOR, MODICUM_TIME, SMOL_REP_FACTOR, SMOL_TIME
 T = TypeVar("T")
 
 
-class ChanSetup:
-    class SetupChan(IsolatedAsyncioTestCase):
+class Setup:
+    class Chan(IsolatedAsyncioTestCase):
         async def asyncSetUp(self) -> None:
             self.ch = chan(int)
 
 
-class TypeConformance(ChanSetup.SetupChan):
+class TypeConformance(Setup.Chan):
     async def test_1(self) -> None:
         self.assertIsInstance(self.ch, Chan)
 
 
-class Close(ChanSetup.SetupChan):
+class Close(Setup.Chan):
     async def test_1(self) -> None:
         self.assertTrue(self.ch)
 
@@ -57,7 +57,7 @@ class Close(ChanSetup.SetupChan):
         await gather(c1(), c2())
 
 
-class SendRecvSync(ChanSetup.SetupChan):
+class SendRecvSync(Setup.Chan):
     async def test_1(self) -> None:
         (self.ch < 1)
         iden = [] < self.ch
@@ -73,41 +73,41 @@ class SendRecvSync(ChanSetup.SetupChan):
             ([] < self.ch)
 
 
-class SendRecv(ChanSetup.SetupChan):
+class SendRecv(Setup.Chan):
     async def test_1(self) -> None:
         await (self.ch << 1)
         iden = await ([] << self.ch)
         self.assertEqual(iden, 1)
 
 
-class SendToClosed(ChanSetup.SetupChan):
+class SendToClosed(Setup.Chan):
     async def test_1(self) -> None:
         await self.ch.aclose()
         with self.assertRaises(ChanClosed):
             await (self.ch << 1)
 
 
-class RecvFromClosed(ChanSetup.SetupChan):
+class RecvFromClosed(Setup.Chan):
     async def test_1(self) -> None:
         await self.ch.aclose()
         with self.assertRaises(ChanClosed):
             await ([] << self.ch)
 
 
-class DoubleSend(ChanSetup.SetupChan):
+class DoubleSend(Setup.Chan):
     async def test_1(self) -> None:
         with self.assertRaises(TimeoutError):
             await (self.ch << 1)
             await wait_for(self.ch << 1, timeout=SMOL_TIME)
 
 
-class EmptyRecv(ChanSetup.SetupChan):
+class EmptyRecv(Setup.Chan):
     async def test_1(self) -> None:
         with self.assertRaises(TimeoutError):
             await wait_for([] << self.ch, timeout=SMOL_TIME)
 
 
-class ManySendRecv(ChanSetup.SetupChan):
+class ManySendRecv(Setup.Chan):
     async def test_1(self) -> None:
         await (self.ch << 1)
         await gather(self.ch << 1, [] << self.ch)
@@ -143,7 +143,7 @@ class ManySendRecv(ChanSetup.SetupChan):
         self.assertEqual(len(self.ch), 0)
 
 
-class ClosedNotif(ChanSetup.SetupChan):
+class ClosedNotif(Setup.Chan):
     async def test_1(self) -> None:
         with self.assertRaises(TimeoutError):
             await wait_for(self.ch._on_closed(), timeout=SMOL_TIME)
@@ -160,7 +160,7 @@ class ClosedNotif(ChanSetup.SetupChan):
         self.assertFalse(ch2)
 
 
-class SendableNotif(ChanSetup.SetupChan):
+class SendableNotif(Setup.Chan):
     async def test_1(self) -> None:
         await (self.ch << 1)
         with self.assertRaises(TimeoutError):
@@ -170,7 +170,7 @@ class SendableNotif(ChanSetup.SetupChan):
         await wait_for(self.ch._on_sendable(), timeout=SMOL_TIME)
 
 
-class RecvableNotif(ChanSetup.SetupChan):
+class RecvableNotif(Setup.Chan):
     async def test_1(self) -> None:
         with self.assertRaises(TimeoutError):
             await wait_for(self.ch._on_recvable(), timeout=SMOL_TIME)
