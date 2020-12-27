@@ -1,4 +1,3 @@
-from asyncio.locks import Event
 from asyncio.tasks import create_task
 from typing import (
     Any,
@@ -7,13 +6,11 @@ from typing import (
     MutableMapping,
     Protocol,
     TypeVar,
-    cast,
     runtime_checkable,
 )
-from itertools import chain
 
 from ._da import race
-from .types import Chan, Closable
+from .types import Chan
 
 T = TypeVar("T")
 
@@ -21,8 +18,12 @@ Sender = Callable[[], T]
 Recver = Callable[[T], None]
 
 
+class StopSelector(Exception):
+    ...
+
+
 @runtime_checkable
-class Selector(Closable, AsyncContextManager["Selector"], Protocol):
+class Selector(AsyncContextManager["Selector"], Protocol):
     """
     async with selector() as sr:
         @sr.on_sendable(ch)
@@ -54,43 +55,32 @@ class Selector(Closable, AsyncContextManager["Selector"], Protocol):
 
 class _Selector(Selector):
     def __init__(self) -> None:
-        self._on_closed = Event()
         self._sc: MutableMapping[Chan[Any], Sender[Any]] = {}
         self._rc: MutableMapping[Chan[Any], Recver[Any]] = {}
 
-    def __bool__(self) -> bool:
-        return not self._on_closed.is_set()
-
     async def __aexit__(self, *_: Any) -> None:
-        while not self._on_closed.is_set() and (self._sc or self._rc):
+        while self._sc or self._rc:
             ch, _ = await race(
-                *(
-                    create_task(aw)
-                    for aw in chain(
-                        (self._on_closed.wait(),),
-                        (ch._on_sendable() for ch in self._sc),
-                        (ch._on_recvable() for ch in self._rc),
-                    )
-                )
+                *(create_task(ch._on_sendable()) for ch in self._sc),
+                *(create_task(ch._on_recvable()) for ch in self._rc),
             )
-            if ch == True:
-                break
-            else:
-                ch = cast(Chan[Any], ch)
-                if not ch:
-                    self._sc = {c: f for c, f in self._sc.items()}
-                    self._rc = {c: f for c, f in self._rc.items()}
-                elif ch in self._sc:
-                    if ch.sendable():
+            if not ch:
+                self._sc = {c: f for c, f in self._sc.items()}
+                self._rc = {c: f for c, f in self._rc.items()}
+            elif ch in self._sc:
+                if ch.sendable():
+                    try:
                         ch.try_send(self._sc[ch]())
-                elif ch in self._rc:
-                    if ch.recvable():
+                    except StopSelector:
+                        break
+            elif ch in self._rc:
+                if ch.recvable():
+                    try:
                         self._rc[ch](ch.try_recv())
-                else:
-                    assert False
-
-    def close(self) -> None:
-        self._on_closed.set()
+                    except StopSelector:
+                        break
+            else:
+                assert False
 
     def on_sendable(
         self,
@@ -113,11 +103,11 @@ class _Selector(Selector):
         return decor
 
 
-async def selector() -> Selector:
+def selector() -> Selector:
     """
     special `select` to support sendable chan
 
     see doc for `Selector`
     """
-    s = _Selector()
-    return s
+
+    return _Selector()

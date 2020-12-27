@@ -2,8 +2,7 @@ from asyncio import sleep
 from unittest import IsolatedAsyncioTestCase
 
 from ...forechan.chan import chan
-from ...forechan.selector import selector
-from ...forechan.types import Chan
+from ...forechan.selector import StopSelector, selector
 
 
 class SelectorSetup:
@@ -17,16 +16,16 @@ class UpstreamSend(SelectorSetup.SetupChan):
         await (self.u1 << 1)
         await (self.u2 << 2)
 
-        async with await selector() as sr:
+        async with selector() as sr:
 
             @sr.on_recvable(self.u1)
             def c1(val: int) -> None:
                 self.assertEqual(val, 1)
-                sr.close()
+                raise StopSelector()
 
             @sr.on_recvable(self.u2)
             def c2(val: int) -> None:
                 self.assertEqual(val, 2)
-                sr.close()
+                raise StopSelector()
 
         self.assertFalse(sr)
