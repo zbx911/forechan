@@ -10,16 +10,11 @@ T = TypeVar("T")
 
 
 class _BaseChan(Chan[T], AsyncIterator[T]):
-    _b: Buf[T]
+    def __init__(self) -> None:
+        self._onclose = Event()
 
-    def __str__(self) -> str:
-        if self:
-            return f"chan[{', '.join(str(item) for item in self._b)}]"
-        else:
-            return "chan|<closed>|"
-
-    def __len__(self) -> int:
-        return len(self._b)
+    def __bool__(self) -> bool:
+        return not self._onclose.is_set()
 
     async def __aenter__(self) -> Chan[T]:
         return self
@@ -48,29 +43,38 @@ class _BaseChan(Chan[T], AsyncIterator[T]):
     async def __rlshift__(self, _: Any) -> T:
         return await self.recv()
 
+    async def aclose(self) -> None:
+        await sleep(0)
+        self._onclose.set()
+
+
+class _Chan(_BaseChan[T]):
+    def __init__(self, b: Buf[T]) -> None:
+        super().__init__()
+        self._b = b
+        self._sendable_ev, self._recvable_ev = Event(), Event()
+        self._sendable_ev.set()
+
+    def __str__(self) -> str:
+        if self:
+            return f"chan[{', '.join(str(item) for item in self._b)}]"
+        else:
+            return "chan|<closed>|"
+
+    def __len__(self) -> int:
+        return len(self._b) if self else 0
+
     def sendable(self) -> bool:
         return bool(self) and not self._b.full()
 
     def recvable(self) -> bool:
         return bool(self) and not self._b.empty()
 
-
-class _Chan(_BaseChan[T]):
-    def __init__(self, b: Buf[T]) -> None:
-        self._b: Buf[T] = b
-        self._sendable_ev, self._recvable_ev = Event(), Event()
-        self._onclose = Event()
-        self._sendable_ev.set()
-
-    def __bool__(self) -> bool:
-        return not self._onclose.is_set()
-
     async def aclose(self) -> None:
-        await sleep(0)
-        self._b.clear()
-        self._onclose.set()
+        await super().aclose()
         self._sendable_ev.set()
         self._recvable_ev.set()
+        self._b.clear()
 
     @contextmanager
     def _state_handler(self) -> Iterator[None]:
