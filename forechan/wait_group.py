@@ -3,9 +3,11 @@ from asyncio import sleep
 from asyncio.locks import Event
 from typing import Any, ContextManager, Protocol, Sized, runtime_checkable
 
+from .types import Boolable
+
 
 @runtime_checkable
-class WaitGroup(Sized, ContextManager[None], Protocol):
+class WaitGroup(Sized, Boolable, ContextManager[None], Protocol):
     """
     wg = wait_group()
 
@@ -27,6 +29,9 @@ class _WaitGroup(WaitGroup):
     def __init__(self) -> None:
         self._counter = 0
         self._event = Event()
+
+    def __bool__(self) -> bool:
+        return not self._event.is_set()
 
     def __len__(self) -> int:
         return self._counter
