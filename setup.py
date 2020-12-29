@@ -10,7 +10,7 @@ package_data = {pkg: ("py.typed",) for pkg in packages}
 
 setup(
     name="forechan",
-    version="0.1.3",
+    version="0.1.4",
     description="Go style CSP for Python",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
