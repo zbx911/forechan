@@ -21,8 +21,7 @@ class Context(Boolable, Protocol):
     @abstractmethod
     def ttl(self) -> timedelta:
         """
-        how many seconds until scheduled cancellation
-        can be `inf`
+        how much time left until scheduled cancellation
         """
 
     @abstractmethod
