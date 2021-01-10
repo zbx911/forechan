@@ -19,9 +19,9 @@ class Context(Boolable, Protocol):
         """
 
     @abstractmethod
-    def ttl(self) -> timedelta:
+    def ttl(self) -> float:
         """
-        how much time left until scheduled cancellation
+        how many seconds left until scheduled cancellation
         """
 
     @abstractmethod
@@ -50,9 +50,9 @@ class _Context(Context):
     def done(self) -> Chan[None]:
         return self._ch
 
-    def ttl(self) -> timedelta:
+    def ttl(self) -> float:
         seconds = max(self._deadline - monotonic(), 0.0) if self else 0.0
-        return timedelta(seconds=seconds)
+        return seconds
 
     def cancel(self) -> None:
         for child in self._children:
