@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio.tasks import create_task, sleep
-from math import isinf
-from time import monotonic, time
+from datetime import datetime, timedelta, timezone
+from time import monotonic
 from typing import MutableSequence, Optional, Protocol
 
 from .broadcast import broadcast
@@ -19,7 +19,7 @@ class Context(Boolable, Protocol):
         """
 
     @abstractmethod
-    def ttl(self) -> float:
+    def ttl(self) -> timedelta:
         """
         how many seconds until scheduled cancellation
         can be `inf`
@@ -51,8 +51,9 @@ class _Context(Context):
     def done(self) -> Chan[None]:
         return self._ch
 
-    def ttl(self) -> float:
-        return max(self._deadline - monotonic(), 0.0) if self else 0.0
+    def ttl(self) -> timedelta:
+        seconds = max(self._deadline - monotonic(), 0.0) if self else 0.0
+        return timedelta(seconds=seconds)
 
     def cancel(self) -> None:
         for child in self._children:
@@ -65,18 +66,20 @@ class _Context(Context):
             child.cancel()
 
 
-async def ctx_with_timeout(ttl: float, parent: Optional[Context] = None) -> Context:
-    monotonic_deadline = monotonic() + ttl
+async def ctx_with_timeout(ttl: timedelta, parent: Optional[Context] = None) -> Context:
+    ttl_seconds = ttl.total_seconds()
+    monotonic_deadline = monotonic() + ttl_seconds
     ctx = _Context(deadline=monotonic_deadline)
     if parent is not None:
         parent.attach(ctx)
 
-    if ttl <= 0:
+    if ttl_seconds <= 0:
         ctx.cancel()
-    elif not isinf(ttl):
+
+    else:
 
         async def cont() -> None:
-            await sleep(ttl)
+            await sleep(ttl_seconds)
             ctx.cancel()
 
         create_task(cont())
@@ -85,7 +88,7 @@ async def ctx_with_timeout(ttl: float, parent: Optional[Context] = None) -> Cont
 
 
 async def ctx_with_deadline(
-    deadline: float, parent: Optional[Context] = None
+    deadline: datetime, parent: Optional[Context] = None
 ) -> Context:
-    ttl = deadline - time()
+    ttl = datetime.now(tz=timezone.utc) - deadline
     return await ctx_with_timeout(ttl, parent=parent)
