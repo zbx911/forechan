@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from asyncio.tasks import create_task, sleep
 from math import isinf
-from time import monotonic
+from time import monotonic, time
 from typing import MutableSequence, Optional, Protocol
 
 from .broadcast import broadcast
@@ -82,3 +82,10 @@ async def ctx_with_timeout(ttl: float, parent: Optional[Context] = None) -> Cont
         create_task(cont())
 
     return ctx
+
+
+async def ctx_with_deadline(
+    deadline: float, parent: Optional[Context] = None
+) -> Context:
+    ttl = deadline - time()
+    return await ctx_with_timeout(ttl, parent=parent)
