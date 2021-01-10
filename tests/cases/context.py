@@ -33,7 +33,7 @@ class ContextTimeout(IsolatedAsyncioTestCase):
         self.assertFalse(ctx)
 
     async def test_5(self) -> None:
-        ttl = timedelta(seconds=-10)
+        ttl = -timedelta(seconds=10)
         ctx = await ctx_with_timeout(ttl)
         self.assertEqual(ctx.ttl().total_seconds(), 0)
         self.assertFalse(ctx)
