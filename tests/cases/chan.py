@@ -79,6 +79,16 @@ class SendRecv(Setup.Chan):
         iden = await ([] << self.ch)
         self.assertEqual(iden, 1)
 
+    async def test_2(self) -> None:
+        await (self.ch << 1)
+        self.assertTrue(self.ch.recvable())
+
+    async def test_3(self) -> None:
+        (self.ch < 1)
+        self.assertTrue(self.ch.recvable())
+
+    async def test_4(self) -> None:
+        self.assertFalse(self.ch.recvable())
 
 class SendToClosed(Setup.Chan):
     async def test_1(self) -> None:

@@ -21,3 +21,11 @@ class Broadcast(Setup.Chan):
         for _ in range(SMOL_REP_FACTOR):
             cur = await ([] << self.ch)
             self.assertEqual(cur, 2)
+
+    async def test_3(self) -> None:
+        (self.ch < 1)
+        self.assertTrue(self.ch.recvable())
+
+    async def test_4(self) -> None:
+        await (self.ch << 1)
+        self.assertTrue(self.ch.recvable())
