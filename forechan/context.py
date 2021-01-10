@@ -90,5 +90,5 @@ async def ctx_with_timeout(ttl: timedelta, parent: Optional[Context] = None) -> 
 async def ctx_with_deadline(
     deadline: datetime, parent: Optional[Context] = None
 ) -> Context:
-    ttl = datetime.now(tz=timezone.utc) - deadline
+    ttl = deadline - datetime.now(tz=timezone.utc)
     return await ctx_with_timeout(ttl, parent=parent)
