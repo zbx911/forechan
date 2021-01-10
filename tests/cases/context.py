@@ -2,7 +2,6 @@ from asyncio import sleep
 from math import inf
 from unittest import IsolatedAsyncioTestCase
 
-from ...forechan.chan import chan
 from ...forechan.context import ctx_with_timeout
 
 
@@ -39,7 +38,6 @@ class ContextTimeout(IsolatedAsyncioTestCase):
     async def test_6(self) -> None:
         ttl = -10
         ctx = await ctx_with_timeout(ttl)
-        await sleep(0)
         self.assertEqual(ctx.ttl(), 0)
         self.assertFalse(ctx)
 

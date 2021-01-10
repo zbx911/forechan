@@ -71,7 +71,9 @@ async def ctx_with_timeout(ttl: float, parent: Optional[Context] = None) -> Cont
     if parent is not None:
         parent.attach(ctx)
 
-    if not isinf(ttl):
+    if ttl <= 0:
+        ctx.cancel()
+    elif not isinf(ttl):
 
         async def cont() -> None:
             await sleep(ttl)
