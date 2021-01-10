@@ -60,10 +60,12 @@ class _Selector(Selector):
 
     async def __aexit__(self, *_: Any) -> None:
         while self._sc or self._rc:
-            ch, __ = await race(
+            _ch, __, __ = await race(
                 *(create_task(ch._on_sendable()) for ch in self._sc),
                 *(create_task(ch._on_recvable()) for ch in self._rc),
             )
+            ch = _ch.result()
+
             if not ch:
                 self._sc = {c: f for c, f in self._sc.items()}
                 self._rc = {c: f for c, f in self._rc.items()}

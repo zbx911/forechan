@@ -19,7 +19,9 @@ async def select(*cs: Chan[Any]) -> AsyncIterator[Tuple[Chan[Any], Any]]:
     chans: MutableSequence[Chan[Any]] = [*cs]
 
     while chans:
-        ready, _ = await race(*(create_task(c._on_recvable()) for c in chans))
+        _ready, _, _ = await race(*(create_task(c._on_recvable()) for c in chans))
+        ready = _ready.result()
+
         if not ready:
             chans[:] = [c for c in chans if c]
         elif ready.recvable():

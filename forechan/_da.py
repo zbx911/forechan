@@ -1,16 +1,13 @@
 from asyncio.futures import Future
 from asyncio.tasks import FIRST_COMPLETED, wait
-from itertools import chain
-from typing import Sequence, Tuple, TypeVar
-
-T = TypeVar("T")
+from typing import Any, Set, Tuple, TypeVar, cast
 
 
-async def pure(item: T) -> T:
-    return item
+_T2 = TypeVar("_T2", bound=Future)
 
 
-async def race(aw: Future[T], *aws: Future[T]) -> Tuple[T, Sequence[Future[T]]]:
-    done, pending = await wait(tuple((aw, *aws)), return_when=FIRST_COMPLETED)
-    ret = done.pop().result()
-    return ret, tuple(chain(done, pending))
+async def race(aw: _T2, *aws: _T2) -> Tuple[_T2, Set[_T2], Set[_T2]]:
+    r: Any = await wait(tuple((aw, *aws)), return_when=FIRST_COMPLETED)
+    done, pending = cast(Tuple[Set[_T2], Set[_T2]], r)
+    ret = done.pop()
+    return ret, done, pending
