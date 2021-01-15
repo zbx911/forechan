@@ -7,7 +7,7 @@ _T2 = TypeVar("_T2", bound=Future)
 
 
 async def race(aw: _T2, *aws: _T2) -> Tuple[_T2, Set[_T2], Set[_T2]]:
-    r: Any = await wait(tuple((aw, *aws)), return_when=FIRST_COMPLETED)
+    r: Any = await wait((aw, *aws), return_when=FIRST_COMPLETED)
     done, pending = cast(Tuple[Set[_T2], Set[_T2]], r)
     ret = done.pop()
     return ret, done, pending
