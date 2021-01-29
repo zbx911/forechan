@@ -22,7 +22,7 @@ class WaitGroup(Setup.WG):
     async def test_3(self) -> None:
         self.wg.__enter__()
         self.wg.__exit__(None, None, None)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             self.wg.__exit__(None, None, None)
 
     async def test_4(self) -> None:
@@ -43,3 +43,12 @@ class WaitGroup(Setup.WG):
 
         await self.wg.wait()
         self.assertEqual(i, 0)
+
+    async def test_6(self) -> None:
+        async def cont() -> None:
+            with self.wg:
+                raise KeyError()
+
+        create_task(cont())
+        with self.assertRaises(KeyError):
+            await self.wg.wait()
