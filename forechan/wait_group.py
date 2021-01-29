@@ -64,7 +64,9 @@ class _WaitGroup(WaitGroup):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> Literal[True]:
-        if exc_value is not None:
+        if self._err is not None:
+            pass
+        elif exc_value is not None:
             self._err = exc_value
             self._event.set()
         else:
@@ -77,14 +79,14 @@ class _WaitGroup(WaitGroup):
         return True
 
     def maybe_throw(self) -> None:
-        if self._err:
+        if self._err is not None:
             raise self._err
 
     async def wait(self) -> None:
         await sleep(0)
         if len(self):
             await self._event.wait()
-            if self._err:
+            if self._err is not None:
                 raise self._err
 
 
