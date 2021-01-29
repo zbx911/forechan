@@ -5,12 +5,14 @@ from asyncio.tasks import create_task, sleep
 from datetime import datetime, timezone
 from math import isfinite
 from time import monotonic
-from typing import MutableSequence, Optional, Protocol, TypeVar
+from typing import MutableSet, Optional, Protocol, TypeVar
+from weakref import WeakSet
 
 from .broadcast import broadcast
 from .types import Boolable, Chan
 
 T = TypeVar("T")
+U = TypeVar("U")
 T_co = TypeVar("T_co", covariant=True)
 
 
@@ -53,7 +55,7 @@ class _Context(Context[T_co]):
         self._v = val
         self._ch: Chan[None] = broadcast(None)
         self._deadline = deadline
-        self._children: MutableSequence[Context] = []
+        self._children: MutableSet[Context] = WeakSet()
 
     def __bool__(self) -> bool:
         return not self.done.recvable()
@@ -76,9 +78,16 @@ class _Context(Context[T_co]):
         self.done.try_send(None)
 
     def attach(self, child: Context) -> None:
-        self._children.append(child)
+        self._children.add(child)
         if not self:
             child.cancel()
+
+
+def ctx_with_parent(val: T, parent: Context[U]) -> Context[T]:
+    monotonic_deadline = monotonic() + parent.ttl()
+    ctx = _Context(val=val, deadline=monotonic_deadline)
+    parent.attach(ctx)
+    return ctx
 
 
 async def ctx_with_timeout(
