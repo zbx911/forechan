@@ -33,6 +33,7 @@ class WaitGroup(Sized, Boolable, ContextManager[None], Protocol):
         ...
     """
 
+    @abstractmethod
     def __call__(self, f: T) -> T:
         """
         @wg
