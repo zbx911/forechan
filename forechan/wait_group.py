@@ -3,16 +3,23 @@ from asyncio import sleep
 from asyncio.locks import Event
 from types import TracebackType
 from typing import (
+    Any,
+    Callable,
     ContextManager,
     Literal,
     Optional,
     Protocol,
     Sized,
     Type,
+    TypeVar,
+    cast,
     runtime_checkable,
 )
+from asyncio import iscoroutinefunction
 
 from .types import Boolable
+
+T = TypeVar("T", bound=Callable)
 
 
 @runtime_checkable
@@ -26,8 +33,13 @@ class WaitGroup(Sized, Boolable, ContextManager[None], Protocol):
         ...
     """
 
+    def __call__(self, f: T) -> T:
+        """
+        @wg
+        """
+
     @abstractmethod
-    def maybe_throw() -> None:
+    def maybe_throw(self) -> None:
         """
         Throw exceptions, if any
         """
@@ -77,6 +89,17 @@ class _WaitGroup(WaitGroup):
                 self._event.set()
 
         return True
+
+    def __call__(self, f: T) -> T:
+        if not iscoroutinefunction(f):
+            raise ValueError()
+        else:
+
+            async def cont(*args: Any, **kwags: Any) -> None:
+                with self:
+                    await f(*args, **kwags)
+
+            return cast(T, cont)
 
     def maybe_throw(self) -> None:
         if self._err is not None:

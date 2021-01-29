@@ -52,3 +52,12 @@ class WaitGroup(Setup.WG):
         create_task(cont())
         with self.assertRaises(KeyError):
             await self.wg.wait()
+
+    async def test_7(self) -> None:
+        @self.wg
+        async def cont() -> bool:
+            raise KeyError()
+
+        create_task(cont())
+        with self.assertRaises(KeyError):
+            await self.wg.wait()
