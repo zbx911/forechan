@@ -23,6 +23,6 @@ async def select(*cs: Chan[Any]) -> AsyncIterator[Tuple[Chan[Any], Any]]:
         ready = _ready.result()
 
         if not ready:
-            chans[:] = [c for c in chans if c]
+            chans[:] = (c for c in chans if c)
         elif ready.recvable():
             yield ready, ready.try_recv()

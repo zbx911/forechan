@@ -32,8 +32,8 @@ async def pipe(src: Iterable[Chan[T]], dest: Iterable[Chan[T]]) -> None:
         r_ready, s_ready = _r_ready.result(), _s_ready.result()
 
         if not r_ready or not s_ready:
-            r_chans[:] = [c for c in r_chans if c]
-            s_chans[:] = [c for c in s_chans if c]
+            r_chans[:] = (c for c in r_chans if c)
+            s_chans[:] = (c for c in s_chans if c)
         elif r_ready.recvable() and s_ready.sendable():
             s_ready.try_send(r_ready.try_recv())
 
@@ -70,8 +70,8 @@ async def pipe_parallel(src: Iterable[Chan[T]], dest: Iterable[Chan[T]]) -> None
         r_ready, s_ready = _r_ready.result(), _s_ready.result()
 
         if not r_ready or not s_ready:
-            r_chans[:] = [c for c in r_chans if c]
-            s_chans[:] = [c for c in s_chans if c]
+            r_chans[:] = (c for c in r_chans if c)
+            s_chans[:] = (c for c in s_chans if c)
         elif r_ready.recvable() and s_ready.sendable():
             item = r_ready.try_recv()
             s_ready.try_send(item)

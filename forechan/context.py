@@ -2,15 +2,26 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio.tasks import create_task, sleep
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+from math import isfinite
 from time import monotonic
-from typing import MutableSequence, Optional, Protocol
+from typing import MutableSequence, Optional, Protocol, TypeVar
 
 from .broadcast import broadcast
 from .types import Boolable, Chan
 
+T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
-class Context(Boolable, Protocol):
+
+class Context(Boolable, Protocol[T_co]):
+    @property
+    @abstractmethod
+    def val(self) -> T_co:
+        """
+        Context can carry an immutable value
+        """
+
     @property
     @abstractmethod
     def done(self) -> Chan[None]:
@@ -37,14 +48,19 @@ class Context(Boolable, Protocol):
         """
 
 
-class _Context(Context):
-    def __init__(self, deadline: float) -> None:
+class _Context(Context[T_co]):
+    def __init__(self, val: T_co, deadline: float) -> None:
+        self._v = val
         self._ch: Chan[None] = broadcast(None)
         self._deadline = deadline
         self._children: MutableSequence[Context] = []
 
     def __bool__(self) -> bool:
         return not self.done.recvable()
+
+    @property
+    def val(self) -> T_co:
+        return self._v
 
     @property
     def done(self) -> Chan[None]:
@@ -65,17 +81,18 @@ class _Context(Context):
             child.cancel()
 
 
-async def ctx_with_timeout(ttl: timedelta, parent: Optional[Context] = None) -> Context:
-    ttl_seconds = ttl.total_seconds()
+async def ctx_with_timeout(
+    ttl_seconds: float, val: T, parent: Optional[Context] = None
+) -> Context[T]:
     monotonic_deadline = monotonic() + ttl_seconds
-    ctx = _Context(deadline=monotonic_deadline)
+    ctx = _Context(val=val, deadline=monotonic_deadline)
     if parent is not None:
         parent.attach(ctx)
 
     if ttl_seconds <= 0:
         ctx.cancel()
 
-    else:
+    elif isfinite(ttl_seconds):
 
         async def cont() -> None:
             await sleep(ttl_seconds)
@@ -87,7 +104,7 @@ async def ctx_with_timeout(ttl: timedelta, parent: Optional[Context] = None) -> 
 
 
 async def ctx_with_deadline(
-    deadline: datetime, parent: Optional[Context] = None
-) -> Context:
-    ttl = deadline - datetime.now(tz=timezone.utc)
-    return await ctx_with_timeout(ttl, parent=parent)
+    deadline: datetime, val: T, parent: Optional[Context] = None
+) -> Context[T]:
+    ttl = (deadline - datetime.now(tz=timezone.utc)).total_seconds()
+    return await ctx_with_timeout(ttl, val=val, parent=parent)
